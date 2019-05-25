@@ -1,3 +1,3 @@
 # performant-framework
 
-A developer-friendly, performance-oriented framework for quickly builing applications with WordPress
+An opinionated, developer-friendly, performance-oriented framework for builing applications quickly with WordPress.
