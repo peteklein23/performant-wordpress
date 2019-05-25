@@ -1,0 +1,13 @@
+{
+    "name": "peteklein/performant-framework",
+    "description": "A developer-friendly, performance-oriented framework for builing applications with WordPress",
+    "type": "library",
+    "license": "GNU GENERAL PUBLIC LICENSE",
+    "authors": [
+        {
+            "name": "Pete Klein",
+            "email": "peteklein23@gmail.com"
+        }
+    ],
+    "require": {}
+}
