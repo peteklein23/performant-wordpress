@@ -2,61 +2,75 @@
 
 namespace PeteKlein\Performant\Posts;
 
+use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
+use PeteKlein\Performant\Posts\Meta\PostMetaBox;
+use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
+use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
+
 abstract class PostTypeBase
 {
-    /** post type slug to be overriden in inherting class */
+    /**
+     * post type slug to be overriden in inherting class
+     */
     const POST_TYPE = null;
-    const TYPE_PUBLIC = 'public';
-    const TYPE_DEFAULT_API = 'default-api';
-    const TYPE_CUSTOM_API = 'custom-api';
+    
+    const PUBLIC_ARGS = [
+        'public' => true,
+        'has_archive' => true,
+        'show_in_rest' => true,
+        'menu_position' => 25,
+        'supports' => ['title', 'editor', 'thumbnail', 'author']
+    ];
+
+    const PRIVATE_ARGS = [
+        'public' => false,
+        'has_archive' => false,
+        'show_in_rest' => false,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'exclude_from_search' => true,
+        'show_in_nav_menus' => false,
+        'map_meta_cap' => true,
+        'menu_position' => 25,
+        'supports' => ['title', 'editor', 'thumbnail', 'author']
+    ];
+
+    protected $meta;
+    protected $metaBoxes = [];
+    // protected $taxonomies;
+    // protected $featuredImages;
 
     public function __construct()
     {
         if (empty(static::POST_TYPE)) {
-            return new \WP_Error(
-                'no_post_type_set',
-                __('Sorry, you must set a constant of POST_TYPE to inhertit from PostTypeBase', 'performant')
-            );
+            throw new \Exception(__('You must set the constant POST_TYPE to inhertit from PostTypeBase', 'performant'));
         }
     }
-    
-    /** function required to register the post type */
-    abstract public function register();
 
-    /** function that registers the post type, intended to be called from PostType::registerPostType() */
-    protected function registerPostType(
-        string $singularLabel,
-        string $pluralLabel,
-        string $icon,
-        string $type,
-        int $menuPosition = 25,
-        array $supports = ['title', 'editor', 'thumbnail'],
-        bool $isHierarchical = false,
-        array $argOverrides = []
-    ) {
-        $pluralSlug = sanitize_title($pluralLabel);
+    public function create()
+    {
+        $this->meta = new PostMetaCollection();
+        // $this->taxonomies = new PostTaxonomyCollection();
+        // $this->featuredImages = new FeaturedImageCollection();
 
-        $labels = $this->getLabels($singularLabel, $pluralLabel);
-        $defaultArgs = [
-            'labels' => $labels,
-            'supports' => $supports,
-            'menu_icon' => $icon,
-            'hierarchical' => $isHierarchical,
-            'rewrite' => false,  // it shouldn't have rewrite rules
-            // 'capability_type' => [static::POST_TYPE, $pluralSlug], // register it's own capability for permissions
-        ];
-        $typeArgs = $this->getArgsForType($type);
-
-        $combinedArgs = array_merge($defaultArgs, $typeArgs);
-        $finalArgs = array_merge($combinedArgs, $argOverrides);
-
-        return register_post_type(
-            static::POST_TYPE,
-            $finalArgs
-        );
+        $this->registerPostType();
+        $this->registerMeta();
+        $this->registerMetaBoxes();
     }
+    
+    /**
+     * Registers the post type by calling PostType->registerPostType()
+     */
+    abstract public function registerPostType();
 
-    private function getLabels(string $singularLabel, string $pluralLabel)
+    /**
+     * Gets the default label set for registering a post type
+     *
+     * @param string $singularLabel
+     * @param string $pluralLabel
+     * @return array $labels @see https://codex.wordpress.org/Function_Reference/register_post_type#Arguments
+     */
+    protected static function getLabels(string $singularLabel, string $pluralLabel)
     {
         return [
             'name' => $pluralLabel,
@@ -81,34 +95,67 @@ abstract class PostTypeBase
             'item_updated' => $singularLabel . ' ' . __('updated', 'performant'),
         ];
     }
-    
-    private function getArgsForType(string $type)
+
+    protected function register(array $args = [])
     {
-        if ($type === self::TYPE_PUBLIC) {
-            return [
-                'public' => true,
-                'has_archive' => true,
-                'show_in_rest' => true,
-            ];
+        $registeredPostType = register_post_type(
+            static::POST_TYPE,
+            $args
+        );
+
+        if (is_wp_error($registeredPostType)) {
+            throw new \Exception('There was an issue registering the post type.');
         }
-        if ($type === 'default-api') {
-            return [
-                'public' => false,
-                'has_archive' => false,
-                'show_in_rest' => false,
-            ];
-        }
-        if ($type === 'custom-api') {
-            return [
-                'public' => false,
-                'has_archive' => false,
-                'show_in_rest' => false,
-                'publicly_queryable' => true,
-                'show_ui' => true,
-                'exclude_from_search' => true,
-                'show_in_nav_menus' => false,
-                'map_meta_cap' => true
-            ];
-        }
+
+        return $registeredPostType;
     }
+    
+    /**
+     * Register your meta fields here
+     */
+    protected function registerMeta()
+    {
+    }
+
+    /**
+     * Add meta to metaboxes to edit them in the admin here
+     */
+    protected function registerMetaBoxes()
+    {
+    }
+
+    protected function addMeta(string $key, string $label, string $type, array $typeOptions = [], $defaultValue = null, bool $single = true)
+    {
+        $this->meta->addField($key, $label, $type, $typeOptions, $defaultValue, $single);
+
+        return $this;
+    }
+
+    protected function addMetaBox(string $label, array $metaKeys)
+    {
+        $metaBox = new PostMetaBox(static::POST_TYPE, $label);
+        foreach ($metaKeys as $key) {
+            $field = $this->meta->getField($key);
+            if (!empty($field)) {
+                $metaBox->addField($field->getAdminField());
+            }
+        }
+        $this->metaBoxes[] = $metaBox;
+    }
+
+    /*
+    protected function addTaxonomy(string $taxonomy, $default)
+    {
+        $this->taxonomies->addField($taxonomy, $default);
+
+        return $this;
+    }
+
+    protected function addImageSize(string $size)
+    {
+        $this->featuredImages->addSize($size);
+
+        return $this;
+    }
+    */
 }
