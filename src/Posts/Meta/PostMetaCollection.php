@@ -2,6 +2,8 @@
 
 namespace PeteKlein\Performant\Posts\Meta;
 
+use PeteKlein\Performant\Fields\Field;
+
 /**
  * Gets and references metadata across multiple posts
  */
@@ -12,7 +14,7 @@ class PostMetaCollection
 
     public function addField(string $key, string $label, string $type, array $typeOptions = [], $defaultValue = null, bool $single = true)
     {
-        $this->fields[] = new PostMetaField($key, $label, $type, $typeOptions, $defaultValue, $single);
+        $this->fields[] = Field::create($key, $label, $type, $typeOptions, $defaultValue, $single);
 
         return $this;
     }
@@ -67,7 +69,7 @@ class PostMetaCollection
 
         return null;
     }
-    
+
     private function hasFields()
     {
         return !empty($this->fields);
@@ -96,7 +98,7 @@ class PostMetaCollection
                 return $setFields;
             }
             $post_meta->populateFromResults($results);
-            
+
             $this->metaList[] = $post_meta;
         }
 
@@ -106,7 +108,7 @@ class PostMetaCollection
     public function fetch(array $postIds)
     {
         global $wpdb;
-        
+
         // empty meta list
         $this->metaList = [];
 

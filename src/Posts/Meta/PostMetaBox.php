@@ -13,7 +13,7 @@ class PostMetaBox
     {
         $this->container = Container::make('post_meta', $label)
             ->where('post_type', '=', $postType)
-            ->set_datastore( new PostMetaCustomDatastore() );
+            ->set_datastore(new PostMetaCustomDatastore());
     }
 
     public function addField($field)
