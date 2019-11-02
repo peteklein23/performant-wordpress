@@ -6,9 +6,9 @@ use Carbon_Fields\Field;
 
 class NumberField extends FieldBase
 {
-    public function __construct(string $key, string $label, string $type, array $typeOptions = [], $defaultValue = null, bool $single = true)
+    public function __construct(string $key, string $label, array $typeOptions = [], $defaultValue = null, bool $single = true)
     {
-        parent::__construct($key, $label, $type, $typeOptions, $defaultValue, $single);
+        parent::__construct($key, $label, 'number', $typeOptions, $defaultValue, $single);
     }
 
     public function createAdminField()

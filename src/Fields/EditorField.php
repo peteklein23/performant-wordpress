@@ -4,14 +4,14 @@ namespace PeteKlein\Performant\Fields;
 
 use Carbon_Fields\Field;
 
-class TextField extends FieldBase
+class EditorField extends FieldBase
 {
     /**
      * @inheritDoc
      */
     public function __construct(string $key, string $label, array $options = [], $defaultValue = null)
     {
-        parent::__construct($key, $label, 'text', $options, $defaultValue, true);
+        parent::__construct($key, $label, 'editor', $options, $defaultValue, true);
     }
 
     /**
@@ -19,6 +19,6 @@ class TextField extends FieldBase
      */
     public function createAdminField()
     {
-        return Field::make('text', $this->key, $this->label);
+        return Field::make('rich_text', $this->key, $this->label);
     }
 }
