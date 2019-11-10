@@ -44,14 +44,18 @@ class GroupField extends FieldBase
         foreach($meta as $metaResult) {
             if (strpos($metaResult->meta_key, $this->key . '|') !== false) {
 
+                /*
                 echo $metaResult->meta_key . ' = ' . $metaResult->meta_value;
                 echo '<br>';
+                */
                 
                 $keyArray = explode('|', $metaResult->meta_key);
                 if (isset($keyArray[1]) && $keyArray[1] !== '') {
+                    /*
                     echo '<pre>';
                     var_dump($keyArray);
                     echo '</pre>';
+                    */
 
                     $key = $keyArray[1];
                     $index = $keyArray[2];
@@ -59,9 +63,11 @@ class GroupField extends FieldBase
                     $keys = explode(':', $key);
                     $indices = explode(':', $index);
 
+                    /*
                     echo '<pre>';
                     var_dump($keys);
-                    echo '</pre>';
+                    echo '</pre>';'
+                    */
 
                     if (count($indices) === 1) {
                         $field = $this->getField($key);
