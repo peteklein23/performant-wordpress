@@ -128,4 +128,34 @@ class PostMetaCustomDatastore extends Post_Meta_Datastore
             }
         }
     }
+
+    /**
+	 * Delete the field value(s)
+	 *
+	 * @param Field $field The field to delete.
+     * @return void
+     */
+	public function delete( Field $field ) {
+		global $wpdb;
+
+		$storage_key_patterns = $this->key_toolset->get_storage_key_deleter_patterns(
+			( $field instanceof \Carbon_Fields\Field\Complex_Field ),
+			$field->is_simple_root_field(),
+			$this->get_full_hierarchy_for_field( $field ),
+			$this->get_full_hierarchy_index_for_field( $field )
+        );
+        $storage_key_patterns = $this->stripPrefixFromStorageKeyPatterns($storage_key_patterns);
+		$storage_key_comparisons = $this->key_toolset->storage_key_patterns_to_sql( '`meta_key`', $storage_key_patterns );
+
+		$meta_keys = $wpdb->get_col( '
+			SELECT `meta_key`
+			FROM `' . $this->get_table_name() . '`
+			WHERE `' . $this->get_table_field_name() . '` = ' . intval( $this->get_object_id() ) . '
+				AND ' . $storage_key_comparisons . '
+		' );
+
+		foreach ( $meta_keys as $meta_key ) {
+			delete_metadata( $this->get_meta_type(), $this->get_object_id(), $meta_key );
+		}
+	}
 }
