@@ -14,7 +14,8 @@ class PostMeta
         $this->postId = $postId;
     }
 
-    public function add($key, $value){
+    public function add($key, $value)
+    {
         $this->values[$key] = $value;
     }
 

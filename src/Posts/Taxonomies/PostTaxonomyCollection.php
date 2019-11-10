@@ -2,31 +2,38 @@
 
 namespace PeteKlein\Performant\Posts\Taxonomies;
 
+use PeteKlein\Performant\Taxonomies\TaxonomyBase;
+
 class PostTaxonomyCollection
 {
-    public $fields = [];
-    public $taxonomyList = [];
+    private $taxonomies = [];
+    private $terms = [];
 
-    public function addField(string $taxonomy, $default)
+    public function addTaxonomy(TaxonomyBase $taxonomy) : PostTaxonomyCollection
     {
-        $this->fields[] = new PostTaxonomyField($taxonomy, $default);
+        $this->taxonomies[] = $taxonomy;
 
         return $this;
     }
 
-    private function hasFields()
+    private function hasTaxonomies() : bool
     {
-        return !empty($this->fields);
+        return !empty($this->taxonomies);
     }
 
-    private function getTaxonomies()
+    private function listTaxonomySlugs() : array
     {
-        return array_column($this->fields, 'taxonomy');
+        $slugs = [];
+        foreach($this->taxonomies as $taxonomy) {
+            $slugs[] = $taxonomy::TAXONOMY;
+        }
+
+        return $slugs;
     }
 
     public function get(int $postId)
     {
-        foreach ($this->taxonomyList as $postTaxonomies) {
+        foreach ($this->terms as $postTaxonomies) {
             if ($postTaxonomies->postId === $postId) {
                 return $postTaxonomies;
             }
@@ -38,56 +45,57 @@ class PostTaxonomyCollection
     public function list()
     {
         $formatted_list = [];
-        foreach ($this->taxonomyList as $postTaxonomies) {
+        foreach ($this->terms as $postTaxonomies) {
             $formatted_list[$postTaxonomies->postId] = $postTaxonomies->list();
         }
 
         return $formatted_list;
     }
-    
-    private function populateTaxonomiesFromResults($results)
-    {
-        $formatted_results = [];
 
-        // sort posts by IDs
+    private function groupById(array $results) : array
+    {
+        $groupedResults = [];
+
         foreach ($results as $result) {
             $postId = $result->post_id;
 
-            if (empty($formatted_results[$postId])) {
-                $formatted_results[$postId] = [];
+            if (empty($groupedResults[$postId])) {
+                $groupedResults[$postId] = [];
             }
 
-            $formatted_results[$postId][] = $result;
+            $groupedResults[$postId][] = $result;
         }
 
-        // create objects and set fields and values
-        foreach ($formatted_results as $postId => $results) {
+        return $groupedResults;
+    }
+    
+    private function populateTaxonomiesFromResults($results) : void
+    {
+        $groupedResults = $this->groupById($results);
+
+        foreach ($groupedResults as $postId => $terms) {
             $postTaxonomies = new PostTaxonomies($postId);
-            $setFields = $postTaxonomies->setFields($this->fields);
-            
-            if (is_wp_error($setFields)) {
-                return $setFields;
+            foreach($terms as $term) {
+                $typedTerm = new \WP_Term($term);
+                $postTaxonomies->add($typedTerm);
             }
-            $postTaxonomies->populateFromResults($results);
             
-            $this->taxonomyList[] = $postTaxonomies;
+            $this->terms[$postId] = $postTaxonomies;
         }
-        
-        return true;
     }
 
-    public function fetch(array $postIds)
+    public function fetch(array $postIds) : void
     {
         global $wpdb;
 
-        $this->taxonomyList = [];
+        $this->terms = [];
         
-        if (!$this->hasFields()) {
-            return true;
+        if (!$this->hasTaxonomies()) {
+            return;
         }
 
-        $taxonomies = $this->getTaxonomies();
-        $taxonomyList = "'" . join("', '", $taxonomies) . "'";
+        $taxonomySlugs = $this->listTaxonomySlugs();
+        $terms = "'" . join("', '", $taxonomySlugs) . "'";
         $postList = join(', ', $postIds);
 
         $query = "SELECT
@@ -104,13 +112,11 @@ class PostTaxonomyCollection
         FROM $wpdb->term_relationships tr
         INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
         INNER JOIN $wpdb->terms AS t ON t.term_id = tt.term_id
-        WHERE tt.taxonomy IN ($taxonomyList)
+        WHERE tt.taxonomy IN ($terms)
             AND tr.object_id IN ($postList)";
 
         $results = $wpdb->get_results($query);
 
         $this->populateTaxonomiesFromResults($results);
-
-        return true;
     }
 }

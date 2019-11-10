@@ -7,26 +7,16 @@ abstract class TaxonomyBase
     /**
      * The taxonomy name
      */
-    const TAXONOMY = null;
+    const TAXONOMY = '';
+    const TAG_TYPE = 'tag';
+    const CATEGORY_TYPE = 'category';
 
     /**
-     * Default arguments for registering a non-hierarchical taxonomy
+     * Registers the taxonomy, usually by calling TaxonomyBase->register
+     *
+     * @return void
      */
-    const TAG_ARGS = [
-        'public' => true,
-        'show_admin_column' => true,
-        'show_in_rest' => true
-    ];
-    
-    /**
-     * Default arguments for registering a hierarchical taxonomy
-     */
-    const CATEGORY_ARGS = [
-        'public' => true,
-        'show_admin_column' => true,
-        'show_in_rest' => true,
-        'hierarchical' => true
-    ];
+    abstract public function registerTaxonomy() : void;
 
     /**
      * Constructor that checks that the TAXONOMY constant is set on the child
@@ -35,25 +25,62 @@ abstract class TaxonomyBase
     {
         if (empty(static::TAXONOMY)) {
             throw new \Exception(
-                _x('You must set the constant TAXONOMY to inhertit from TaxonomyBase', 'no taxonomy constant', 'performant')
+                _x('You must set the constant TAXONOMY to inherit from TaxonomyBase', 'no taxonomy constant', 'performant')
             );
         }
     }
 
     /**
-     * Registers the taxonomy, usually by calling TaxonomyBase->registerTaxonomy
+     * Return default registration args
      *
+     * @param string $argType - self::TAG_TYPE or self::CATEGORY_TYPE
+     * @param string $singularLabel
+     * @param string $pluralLabel
+     * 
      * @return void
      */
-    abstract public function register();
+    public static function getRegistrationArgs(
+        string $argType, 
+        string $singularLabel, 
+        string $pluralLabel
+    ) : array {
+        $defaultArgs = [
+            'labels' => self::getLabels($singularLabel, $pluralLabel),
+            'public' => true,
+            'show_admin_column' => true,
+            'show_in_rest' => true,
+        ];
 
-    protected function registerTaxonomy(
-        array $objectTypes = [],
+        if ($argType === self::TAG_TYPE) {
+            return array_merge($defaultArgs, [
+                'hierarchical' => false
+            ]);
+        }
+
+        if ($argType === self::CATEGORY_TYPE) {
+            return array_merge($defaultArgs, [
+                'hierarchical' => true
+            ]);
+        }
+
+        return $defaultArgs;
+    }
+
+    /**
+     * Register taxonomies and connect object types
+     *
+     * @param array $postTypes - post types, nav_menu_items, etc
+     * @param array $args - taxonomy registration args
+     * @see https://codex.wordpress.org/Function_Reference/register_taxonomy
+     * @return void
+     */
+    protected function register (
+        array $postTypes = [],
         array $args = []
-    ) {
-        register_taxonomy(static::TAXONOMY, $objectTypes, $args);
+    ) : void {
+        register_taxonomy(static::TAXONOMY, $postTypes, $args);
         
-        $this->connectToObjectTypes($objectTypes);
+        $this->connectToPostTypes($postTypes);
     }
 
     /**
@@ -63,7 +90,7 @@ abstract class TaxonomyBase
      * @param string $pluralLabel
      * @return void
      */
-    protected static function getLabels(string $singularLabel, string $pluralLabel)
+    protected static function getLabels(string $singularLabel, string $pluralLabel) : array
     {
         return [
             'name' => $pluralLabel,
@@ -88,10 +115,28 @@ abstract class TaxonomyBase
         ];
     }
 
-    private function connectToObjectTypes(array $objectTypes)
+    /**
+     * Makes the taxonomy available to other post types
+     *
+     * @param array $objectTypes
+     * @return void
+     */
+    private function connectToPostTypes(array $objectTypes) : void
     {
         foreach ($objectTypes as $objectType) {
             register_taxonomy_for_object_type(self::TAXONOMY, $objectType);
         }
+    }
+
+    /**
+     * Registers the taxonomy and does other setup tasks
+     *
+     * @return void
+     */
+    public function create() : TaxonomyBase
+    {
+        $this->registerTaxonomy();
+
+        return $this;
     }
 }

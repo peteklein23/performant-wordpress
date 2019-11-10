@@ -3,10 +3,11 @@
 namespace PeteKlein\Performant\Posts;
 
 use PeteKlein\Performant\Fields\FieldBase;
+use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaBox;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
-use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
+use PeteKlein\Performant\Taxonomies\TaxonomyBase;
 
 abstract class PostTypeBase
 {
@@ -14,12 +15,12 @@ abstract class PostTypeBase
      * post type slug to be overridden in inheriting class
      */
     const POST_TYPE = '';
-    const PUBLIC_ARG_TYPE = 'public';
-    const PRIVATE_ARG_TYPE = 'private';
+    const PUBLIC_TYPE = 'public';
+    const PRIVATE_TYPE = 'private';
 
     protected $meta;
     protected $metaBoxes = [];
-    // protected $taxonomies;
+    protected $taxonomies;
     // protected $featuredImages;
 
     /**
@@ -34,7 +35,7 @@ abstract class PostTypeBase
         }
 
         $this->meta = new PostMetaCollection();
-        // $this->taxonomies = new PostTaxonomyCollection();
+        $this->taxonomies = new PostTaxonomyCollection();
         // $this->featuredImages = new FeaturedImageCollection();
     }
 
@@ -54,7 +55,7 @@ abstract class PostTypeBase
             'labels' => self::getLabels($singularLabel, $pluralLabel),
             'menu_icon' => $icon
         ];
-        if ($argType === self::PUBLIC_ARG_TYPE) {
+        if ($argType === self::PUBLIC_TYPE) {
             return array_merge($defaultArgs, [
                 'public' => true,
                 'has_archive' => true,
@@ -82,13 +83,23 @@ abstract class PostTypeBase
         return $defaultArgs;
     }
 
-    public function create()
+    /**
+     * Register the post type with the 
+     *
+     * @see https://codex.wordpress.org/Function_Reference/register_post_type#Arguments
+     * @param array $args
+     * @return void
+     */
+    protected function register(array $args = [])
     {
-        $this->registerPostType();
-        $this->registerMeta();
-        $this->registerMetaBoxes();
+        $registeredPostType = register_post_type(
+            static::POST_TYPE,
+            $args
+        );
 
-        return $this;
+        if (is_wp_error($registeredPostType)) {
+            throw new \Exception('There was an issue registering the post type.');
+        }
     }
 
     /**
@@ -125,22 +136,18 @@ abstract class PostTypeBase
     }
 
     /**
-     * Register the post type with the 
+     * Registers the post type, meta and taxonomies
      *
-     * @see https://codex.wordpress.org/Function_Reference/register_post_type#Arguments
-     * @param array $args
-     * @return void
+     * @param $taxonomies - array of taxonomies to register with this post type
      */
-    protected function register(array $args = [])
+    public function create(array $taxonomies = []) : PostTypeBase
     {
-        $registeredPostType = register_post_type(
-            static::POST_TYPE,
-            $args
-        );
+        $this->registerPostType();
+        $this->registerMeta();
+        $this->registerMetaBoxes();
+        $this->addTaxonomies($taxonomies);
 
-        if (is_wp_error($registeredPostType)) {
-            throw new \Exception('There was an issue registering the post type.');
-        }
+        return $this;
     }
 
     /**
@@ -155,14 +162,26 @@ abstract class PostTypeBase
     protected function registerMetaBoxes()
     { }
 
-    protected function addMeta(FieldBase $field)
+    /**
+     * Adds a field to the meta collection
+     *
+     * @param FieldBase $field
+     */
+    protected function addMeta(FieldBase $field) : PostTypeBase
     {
         $this->meta->addField($field);
 
         return $this;
     }
 
-    protected function addMetaBox(string $label, array $metaKeys)
+    /**
+     * Create a meta box to 
+     *
+     * @param string $label
+     * @param array $metaKeys
+     * @return void
+     */
+    protected function addMetaBox(string $label, array $metaKeys) : void
     {
         $metaBox = new PostMetaBox(static::POST_TYPE, $label);
         foreach ($metaKeys as $key) {
@@ -174,14 +193,35 @@ abstract class PostTypeBase
         $this->metaBoxes[] = $metaBox;
     }
 
-    /*
-    protected function addTaxonomy(string $taxonomy, $default)
+    /**
+     * Add Taxonomies
+     *
+     * @param array $taxonomies - array of taxonomies
+     * @return void
+     */
+    private function addTaxonomies(array $taxonomies = []) : void
     {
-        $this->taxonomies->addField($taxonomy, $default);
+        if (empty($taxonomies)) {
+            return;
+        }
+        foreach ($taxonomies as $taxonomy) {
+            $this->addTaxonomy($taxonomy);
+        }
+    }
+
+    /**
+     * Adds a taxonomy to the taxonomy collection
+     *
+     * @param TaxonomyBase $taxonomy
+     */
+    protected function addTaxonomy(TaxonomyBase $taxonomy = null) : PostTypeBase
+    {
+        $this->taxonomies->addTaxonomy($taxonomy);
 
         return $this;
     }
 
+    /*
     protected function addImageSize(string $size)
     {
         $this->featuredImages->addSize($size);
@@ -195,5 +235,12 @@ abstract class PostTypeBase
         $this->meta->fetch($postIds);
 
         return $this->meta->list();
+    }
+
+    public function listTaxonomies($postIds = [])
+    {
+        $this->taxonomies->fetch($postIds);
+
+        return $this->taxonomies->list();
     }
 }

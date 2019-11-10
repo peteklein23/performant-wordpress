@@ -3,6 +3,7 @@
 namespace PeteKlein\Performant;
 
 use PeteKlein\Performant\Posts\PostTypeBase;
+use PeteKlein\Performant\Taxonomies\TaxonomyBase;
 
 class PerformantTheme
 {
@@ -31,8 +32,8 @@ class PerformantTheme
     {
         $this->addThemeSupport();
         $this->initCarbonFields();
-        $this->registerPostTypes();
         $this->registerTaxonomies();
+        $this->registerPostTypes();
         $this->registerShortcodes();
         $this->registerNavMenus();
     }
@@ -62,11 +63,11 @@ class PerformantTheme
     }
 
     /**
-     * add a post type
+     * Add a post type
      * 
      * @return void
      */
-    public function addPostType(PostTypeBase $postType)
+    public function addPostType(PostTypeBase $postType) : void
     {
         $this->postTypes[] = $postType;
     }
@@ -76,10 +77,10 @@ class PerformantTheme
      * 
      * @return void
      */
-    public function getPostType(string $key) : PostTypeBase
+    public function getPostType(string $slug) : ?PostTypeBase
     {
-        foreach($this->postTypes as $postType) {
-            if($postType::POST_TYPE === $key){
+        foreach ($this->postTypes as $postType) {
+            if ($postType::POST_TYPE === $slug) {
                 return $postType;
             }
         }
@@ -92,6 +93,32 @@ class PerformantTheme
      */
     public function registerTaxonomies()
     {
+    }
+
+    /**
+     * Add a taxonomy
+     * 
+     * @return void
+     */
+    public function addTaxonomy(TaxonomyBase $taxonomy) : void
+    {
+        $this->taxonomies[] = $taxonomy;
+    }
+
+    /**
+     * return a registered taxonomy
+     *
+     * @param string $slug
+     */
+    public function getTaxonomy(string $slug) : ?TaxonomyBase
+    {
+        foreach($this->taxonomies as $taxonomy) {
+            if ($taxonomy::TAXONOMY === $slug) {
+                return $taxonomy;
+            }
+        }
+
+        return null;
     }
 
     /**
