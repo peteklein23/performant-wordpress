@@ -2,6 +2,7 @@
 
 namespace PeteKlein\Performant\Posts;
 
+use PeteKlein\Performant\Fields\FieldBase;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaBox;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
@@ -86,6 +87,8 @@ abstract class PostTypeBase
         $this->registerPostType();
         $this->registerMeta();
         $this->registerMetaBoxes();
+
+        return $this;
     }
 
     /**
@@ -152,9 +155,9 @@ abstract class PostTypeBase
     protected function registerMetaBoxes()
     { }
 
-    protected function addMeta(string $key, string $label, string $type, array $typeOptions = [], $defaultValue = null, bool $single = true)
+    protected function addMeta(FieldBase $field)
     {
-        $this->meta->addField($key, $label, $type, $typeOptions, $defaultValue, $single);
+        $this->meta->addField($field);
 
         return $this;
     }
@@ -186,4 +189,11 @@ abstract class PostTypeBase
         return $this;
     }
     */
+
+    public function listMeta($postIds = [])
+    {
+        $this->meta->fetch($postIds);
+
+        return $this->meta->list();
+    }
 }

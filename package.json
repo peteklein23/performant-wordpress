@@ -1,0 +1,12 @@
+{
+  "name": "performant-wordpress",
+  "version": "0.0.1",
+  "description": "An opinionated, developer-friendly, performance-oriented framework for builing applications quickly with WordPress.",
+  "main": "index.js",
+  "repository": "https://github.com/peteklein23/performant-wordpress.git",
+  "author": "Pete Klein <hello@peteklein.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "1.18.2"
+  }
+}

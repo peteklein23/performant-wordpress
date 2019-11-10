@@ -35,4 +35,16 @@ abstract class FieldBase
      * Executes the code to create a field in the WordPress admin 
      */
     abstract public function createAdminField();
+
+    /**
+     * Returns a piece of SQL to use in the WHERE clause: e.g. `"= '$this->key'"` OR `"LIKE '%$this->key%'"`
+     */
+    abstract public function getSelectionSQL();
+
+    /**
+     * Returns the formatted value from meta results
+     * 
+     * @param string $result - meta results for a given object
+     */
+    abstract public function getValue(array $meta);
 }

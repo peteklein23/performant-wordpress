@@ -2,7 +2,7 @@
 
 namespace PeteKlein\Performant\Posts\Meta;
 
-use PeteKlein\Performant\Fields\Field;
+use PeteKlein\Performant\Fields\FieldBase;
 
 /**
  * Gets and references metadata across multiple posts
@@ -10,16 +10,26 @@ use PeteKlein\Performant\Fields\Field;
 class PostMetaCollection
 {
     private $fields = [];
-    private $metaList = [];
+    private $metaResults = [];
 
-    public function addField(string $key, string $label, string $type, array $typeOptions = [], $defaultValue = null, bool $single = true)
+    /**
+     * * Add field to list of fields
+     *
+     * @param FieldBase $field - the field to add
+     */
+    public function addField(FieldBase $field) : PostMetaCollection
     {
-        $this->fields[] = Field::create($key, $label, $type, $typeOptions, $defaultValue, $single);
+        $this->fields[] = $field;
 
         return $this;
     }
 
-    public function getField(string $key)
+    /**
+     * Get a field by field key
+     *
+     * @param string $key - key of the field to retrieve
+     */
+    public function getField(string $key) : ?FieldBase
     {
         foreach ($this->fields as $field) {
             if ($field->key === $key) {
@@ -30,19 +40,19 @@ class PostMetaCollection
         return null;
     }
 
-    public function list()
+    public function list() : array
     {
-        $formatted_list = [];
-        foreach ($this->metaList as $meta) {
-            $formatted_list[$meta->postId] = $meta->list();
+        $formattedList = [];
+        foreach ($this->metaResults as $meta) {
+            $formattedList[$meta->postId] = $meta->list();
         }
 
-        return $formatted_list;
+        return $formattedList;
     }
 
     public function get(int $postId)
     {
-        foreach ($this->metaList as $meta) {
+        foreach ($this->metaResults as $meta) {
             if ($meta->postId === $postId) {
                 return $meta;
             }
@@ -51,16 +61,26 @@ class PostMetaCollection
         return null;
     }
 
-    private function listKeys()
+    private function getWhereClause() : string
     {
-        return array_column($this->fields, 'key');
+        $fieldCount = count($this->fields);
+        $sql = 'WHERE ';
+        foreach($this->fields as $i => $field){
+            $isLast = $i === $fieldCount - 1;
+            $sql .= 'meta_key ' . $field->getSelectionSQL();
+            if(!$isLast) {
+                $sql .= ' OR ';
+            }
+        }
+
+        return $sql;
     }
 
     public function getValue(int $postId, string $key)
     {
         $post = null;
-        if (!empty($this->metaList[$postId])) {
-            $post = $this->metaList[$postId];
+        if (!empty($this->metaResults[$postId])) {
+            $post = $this->metaResults[$postId];
         }
 
         if (!empty($post[$key])) {
@@ -70,80 +90,79 @@ class PostMetaCollection
         return null;
     }
 
-    private function hasFields()
+    private function hasFields() : bool
     {
         return !empty($this->fields);
     }
 
-    private function populateMetaFromResults(array $results)
+    private function groupById(array $results) : array
     {
-        $formatted_results = [];
+        $groupedResults = [];
 
-        // sort posts by IDs
         foreach ($results as $result) {
             $postId = $result->post_id;
 
-            if (empty($formatted_results[$postId])) {
-                $formatted_results[$postId] = [];
+            if (empty($groupedResults[$postId])) {
+                $groupedResults[$postId] = [];
             }
 
-            $formatted_results[$postId][] = $result;
+            $groupedResults[$postId][] = $result;
         }
 
-        // create PostMeta objects and set fields and values
-        foreach ($formatted_results as $postId => $results) {
-            $post_meta = new PostMeta($postId);
-            $setFields = $post_meta->setFields($this->fields);
-            if (is_wp_error($setFields)) {
-                return $setFields;
-            }
-            $post_meta->populateFromResults($results);
-
-            $this->metaList[] = $post_meta;
-        }
-
-        return true;
+        return $groupedResults;
     }
 
-    public function fetch(array $postIds)
+    private function populateMetaFromResults(array $results) : void
+    {
+        $groupedResults = $this->groupById($results);
+        
+        foreach ($this->fields as $field) {
+            foreach($groupedResults as $postId => $meta) {
+                $postMeta = $this->get($postId);
+                if(empty($postMeta)){
+                    $postMeta = new PostMeta($postId);
+                    $this->metaResults[] = $postMeta;
+                }
+                $value = $field->getValue($meta);
+                $postMeta->add($field->key, $value);
+            }
+        }
+    }
+
+    public function fetch(array $postIds) : void
     {
         global $wpdb;
 
         // empty meta list
-        $this->metaList = [];
+        $this->metaResults = [];
 
         if (!$this->hasFields()) {
-            return true;
+            return;
         }
 
         $postList = join(',', $postIds);
-        $keys = $this->listKeys();
-        $keyList = "'" . join("','", $keys) . "'";
+        $whereClause = $this->getWhereClause();
 
         $query = "SELECT 
             * 
         FROM $wpdb->postmeta
-        WHERE meta_key IN ($keyList)
+        $whereClause
         AND post_id IN ($postList)";
 
         $results = $wpdb->get_results($query);
         if ($results === false) {
-            return new \WP_Error(
+            // TODO: throw meta exception
+            new \WP_Error(
                 'fetch_post_meta_failed',
                 __('Sorry, fetching the post meta failed.', 'peteklein'),
                 [
                     'post_ids' => $postIds,
-                    'keys' => $keys
+                    'fields' => $this->fields
                 ]
             );
         }
 
-        $populate_meta = $this->populateMetaFromResults($results);
-        if (is_wp_error($populate_meta)) {
-            return $populate_meta;
-        }
-
-        return true;
+        $this->populateMetaFromResults($results);
     }
 
     private function flattenColumns(array $columns, bool $unique)
@@ -162,7 +181,7 @@ class PostMetaCollection
     public function listColumn(string $key, bool $flatten = false, $unique = false)
     {
         $columns = [];
-        foreach ($this->metaList as $meta) {
+        foreach ($this->metaResults as $meta) {
             $columns[] = $meta->get($key);
         }
 

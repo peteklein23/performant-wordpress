@@ -2,8 +2,12 @@
 
 namespace PeteKlein\Performant;
 
+use PeteKlein\Performant\Posts\PostTypeBase;
+
 class PerformantTheme
 {
+    private $postTypes = [];
+
     public function __construct()
     {
         $this->registerHooks();
@@ -12,8 +16,10 @@ class PerformantTheme
     public function registerHooks()
     {
         add_action('after_setup_theme', [$this, 'initTheme']);
+        add_action('init', [$this, 'afterInitTheme']);
         add_action('wp_enqueue_scripts', [$this, 'registerScripts']);
         add_action('wp_enqueue_scripts', [$this, 'registerStyles']);
+        add_action('enqueue_block_editor_assets', [$this, 'registerBlocks']);
         add_action('widgets_init', [$this, 'registerSidebars']);
         add_action('widgets_init', [$this, 'registerWidgets']);
         add_action('admin_menu', [$this, 'registerAdminScreens']);
@@ -30,6 +36,10 @@ class PerformantTheme
         $this->registerShortcodes();
         $this->registerNavMenus();
     }
+
+    public function afterInitTheme()
+    {
+    }
     
     public function addThemeSupport()
     {
@@ -44,22 +54,65 @@ class PerformantTheme
         \Carbon_Fields\Carbon_Fields::boot();
     }
 
+    /**
+     * Register your post types here
+     */
     public function registerPostTypes()
     {
     }
 
+    /**
+     * add a post type
+     * 
+     * @return void
+     */
+    public function addPostType(PostTypeBase $postType)
+    {
+        $this->postTypes[] = $postType;
+    }
+
+    /**
+     * Get Post Type 
+     * 
+     * @return void
+     */
+    public function getPostType(string $key) : PostTypeBase
+    {
+        foreach($this->postTypes as $postType) {
+            if($postType::POST_TYPE === $key){
+                return $postType;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Register your taxonomies here
+     */
     public function registerTaxonomies()
     {
     }
 
+    /**
+     * Register your shortcodes here
+     */
     public function registerShortcodes()
     {
     }
 
+    /**
+     * Register your nav menus here
+     */
     public function registerNavMenus()
     {
     }
 
+    /**
+     * register your scripts here
+     *
+     * @return void
+     */
     public function registerScripts()
     {
     }
@@ -85,6 +138,10 @@ class PerformantTheme
     }
 
     public function registerAdminStyles()
+    {
+    }
+
+    public function registerBlocks()
     {
     }
 }
