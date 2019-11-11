@@ -12,6 +12,11 @@ class PostTaxonomies
         $this->postId = $postId;
     }
 
+    /**
+     * Add a taxonomy to the taxonomies list
+     *
+     * @param \WP_Term $term
+     */
     public function add(\WP_Term $term) : void
     {
         $taxonomy = $term->taxonomy;
@@ -21,6 +26,11 @@ class PostTaxonomies
         $this->terms[$taxonomy][] = $term;
     }
 
+    /**
+     * Get a taxonomy by taxonomy slug
+     *
+     * @param string $taxonomy
+     */
     public function get(string $taxonomy) : array
     {
         if (!empty($this->terms[$taxonomy])) {
@@ -30,7 +40,10 @@ class PostTaxonomies
         return null;
     }
 
-    public function list()
+    /**
+     * Return the list of terms
+     */
+    public function list() : array
     {
         return $this->terms;
     }

@@ -229,7 +229,7 @@ abstract class PostTypeBase
         return $this;
     }
     */
-
+    
     public function listMeta($postIds = [])
     {
         $this->meta->fetch($postIds);

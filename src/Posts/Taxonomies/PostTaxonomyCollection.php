@@ -9,6 +9,11 @@ class PostTaxonomyCollection
     private $taxonomies = [];
     private $terms = [];
 
+    /**
+     * Add a taxonomy to the list of taxonomies
+     *
+     * @param TaxonomyBase $taxonomy
+     */
     public function addTaxonomy(TaxonomyBase $taxonomy) : PostTaxonomyCollection
     {
         $this->taxonomies[] = $taxonomy;
@@ -16,11 +21,17 @@ class PostTaxonomyCollection
         return $this;
     }
 
+    /**
+     * Returns if this class has any taxonomies
+     */
     private function hasTaxonomies() : bool
     {
         return !empty($this->taxonomies);
     }
 
+    /**
+     * Return an array of taxonomies
+     */
     private function listTaxonomySlugs() : array
     {
         $slugs = [];
@@ -31,27 +42,38 @@ class PostTaxonomyCollection
         return $slugs;
     }
 
-    public function get(int $postId)
+    /**
+     * Return a the PostTaxonomies object for a post
+     *
+     * @param integer $postId
+     */
+    public function get(int $postId) : ?PostTaxonomies
     {
-        foreach ($this->terms as $postTaxonomies) {
-            if ($postTaxonomies->postId === $postId) {
-                return $postTaxonomies;
-            }
+        if (!empty($this->terms[$postId])) {
+            return $this->terms[$postId]->list();
         }
 
         return null;
     }
 
-    public function list()
+    /**
+     * Return a formatted list of all terms
+     */
+    public function list() : array
     {
-        $formatted_list = [];
-        foreach ($this->terms as $postTaxonomies) {
-            $formatted_list[$postTaxonomies->postId] = $postTaxonomies->list();
+        $formattedList = [];
+        foreach ($this->terms as $postId => $postTaxonomies) {
+            $formattedList[$postId] = $postTaxonomies->list();
         }
 
-        return $formatted_list;
+        return $formattedList;
     }
 
+    /**
+     * Groups results by object id
+     *
+     * @param array $results
+     */
     private function groupById(array $results) : array
     {
         $groupedResults = [];
@@ -69,7 +91,13 @@ class PostTaxonomyCollection
         return $groupedResults;
     }
     
-    private function populateTaxonomiesFromResults($results) : void
+    /**
+     * Populates Taxonomies with results
+     *
+     * @param array $results
+     * @return void
+     */
+    private function populateTaxonomiesFromResults(array $results) : void
     {
         $groupedResults = $this->groupById($results);
 
