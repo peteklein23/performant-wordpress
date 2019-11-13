@@ -4,10 +4,13 @@ namespace PeteKlein\Performant;
 
 use PeteKlein\Performant\Posts\PostTypeBase;
 use PeteKlein\Performant\Taxonomies\TaxonomyBase;
+use PeteKlein\Performant\Images\ImageSizeBase;
 
 class PerformantTheme
 {
     private $postTypes = [];
+    private $taxonomies = [];
+    private $imageSizes = [];
 
     public function __construct()
     {
@@ -20,7 +23,6 @@ class PerformantTheme
         add_action('init', [$this, 'afterInitTheme']);
         add_action('wp_enqueue_scripts', [$this, 'registerScripts']);
         add_action('wp_enqueue_scripts', [$this, 'registerStyles']);
-        add_action('enqueue_block_editor_assets', [$this, 'registerBlocks']);
         add_action('widgets_init', [$this, 'registerSidebars']);
         add_action('widgets_init', [$this, 'registerWidgets']);
         add_action('admin_menu', [$this, 'registerAdminScreens']);
@@ -28,14 +30,21 @@ class PerformantTheme
         add_action('admin_enqueue_scripts', [$this, 'registerAdminStyles']);
     }
 
+    public function beforeInitTheme()
+    {
+    }
+
     public function initTheme()
     {
+        $this->beforeInitTheme();
         $this->addThemeSupport();
         $this->initCarbonFields();
+        $this->registerImageSizes();
         $this->registerTaxonomies();
         $this->registerPostTypes();
         $this->registerShortcodes();
         $this->registerNavMenus();
+        $this->afterInitTheme();
     }
 
     public function afterInitTheme()
@@ -50,6 +59,7 @@ class PerformantTheme
         add_theme_support('html5', ['search-form']);
     }
 
+    // TODO: move carbon fields into it's own concept and out of theme
     public function initCarbonFields()
     {
         \Carbon_Fields\Carbon_Fields::boot();
@@ -122,6 +132,42 @@ class PerformantTheme
     }
 
     /**
+     * Register image sizes here
+     *
+     * @return void
+     */
+    public function registerImageSizes() : void 
+    {}
+
+    /**
+     * Add image size to the list of image sizes
+     *
+     * @param ImageSizeBase $imageSize
+     * @return void
+     */
+    public function addImageSize(ImageSizeBase $imageSize) : void
+    {
+        $this->imageSizes[] = $imageSize;
+    }
+
+    /**
+     * return a registered image size
+     *
+     * @param string $slug
+     * @return ImageSizeBase|null
+     */
+    public function getImageSize(string $slug) : ?ImageSizeBase
+    {
+        foreach($this->imageSizeBase as $imageSize) {
+            if ($imageSize::NAME === $slug) {
+                return $imageSize;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Register your shortcodes here
      */
     public function registerShortcodes()
@@ -165,10 +211,6 @@ class PerformantTheme
     }
 
     public function registerAdminStyles()
-    {
-    }
-
-    public function registerBlocks()
     {
     }
 }
