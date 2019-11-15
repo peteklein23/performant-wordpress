@@ -13,19 +13,19 @@ class FeaturedImage
     public $width;
 
     public function __construct(
-        string $url = '',
+        string $url,
         string $title = '',
-        string $caption = '',
-        string $alt = '',
-        string $description = '',
+        ?string $caption = '',
+        ?string $alt = '',
+        ?string $description = '',
         $height = 0,
         $width = 0
     ) {
         $this->url = $url;
-        $this->title = $title;
-        $this->caption = $caption;
-        $this->alt = $alt;
-        $this->description = $description;
+        $this->title = !empty($title) ? $title : '';
+        $this->caption = !empty($caption) ? $caption : '';
+        $this->alt = !empty($alt) ? $alt : '';
+        $this->description = !empty($description) ? $description : '';
         $this->height = $height;
         $this->width = $width;
     }

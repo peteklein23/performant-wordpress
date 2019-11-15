@@ -3,6 +3,7 @@
 namespace PeteKlein\Performant\Posts;
 
 use PeteKlein\Performant\Fields\FieldBase;
+use PeteKlein\Performant\Images\ImageSizeBase;
 use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaBox;
@@ -36,7 +37,7 @@ abstract class PostTypeBase
 
         $this->meta = new PostMetaCollection();
         $this->taxonomies = new PostTaxonomyCollection();
-        // $this->featuredImages = new FeaturedImageCollection();
+        $this->featuredImages = new FeaturedImageCollection();
     }
 
     /**
@@ -143,9 +144,10 @@ abstract class PostTypeBase
     public function create(array $taxonomies = []) : PostTypeBase
     {
         $this->registerPostType();
+        $this->addTaxonomies($taxonomies);
         $this->registerMeta();
         $this->registerMetaBoxes();
-        $this->addTaxonomies($taxonomies);
+        $this->registerFeaturedImageSizes();
 
         return $this;
     }
@@ -172,6 +174,19 @@ abstract class PostTypeBase
         $this->meta->addField($field);
 
         return $this;
+    }
+
+    /**
+     * List meta fields for multiple posts
+     *
+     * @param array $postIds
+     * @return void
+     */
+    public function listMeta($postIds = [])
+    {
+        $this->meta->fetch($postIds);
+
+        return $this->meta->list();
     }
 
     /**
@@ -221,26 +236,36 @@ abstract class PostTypeBase
         return $this;
     }
 
-    /*
-    protected function addImageSize(string $size)
-    {
-        $this->featuredImages->addSize($size);
-
-        return $this;
-    }
-    */
-    
-    public function listMeta($postIds = [])
-    {
-        $this->meta->fetch($postIds);
-
-        return $this->meta->list();
-    }
-
+    /**
+     * List taxonomy terms for multiple posts
+     *
+     * @param array $postIds
+     * @return void
+     */
     public function listTaxonomies($postIds = [])
     {
         $this->taxonomies->fetch($postIds);
 
         return $this->taxonomies->list();
+    }
+
+    /**
+     * Register your featured image sizes here
+     */
+    protected function registerFeaturedImageSizes()
+    { }
+
+    protected function addFeaturedImageSize(string $imageSize) : PostTypeBase
+    {
+        $this->featuredImages->addSize($imageSize);
+
+        return $this;
+    }
+
+    public function listFeatureImages($postIds = [])
+    {
+        $this->featuredImages->fetch($postIds);
+
+        return $this->featuredImages->list();
     }
 }

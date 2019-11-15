@@ -2,12 +2,20 @@
 
 namespace PeteKlein\Performant\Posts\FeaturedImages;
 
+use PeteKlein\Performant\Images\ImageSizeBase;
+
 class FeaturedImageCollection
 {
     private $images = [];
     private $sizes = [];
 
-    public function addSize(string $size)
+    /**
+     * Add a featured image size
+     *
+     * @param ImageSizeBase $size
+     * @return void
+     */
+    public function addSize(string $size) : void
     {
         $this->sizes[] = $size;
     }
@@ -23,7 +31,7 @@ class FeaturedImageCollection
         return new FeaturedImages($postId);
     }
 
-    public function list()
+    public function list() : array
     {
         $list = [];
         foreach ($this->images as $images) {
@@ -35,18 +43,16 @@ class FeaturedImageCollection
 
     private function populateImages(array $results)
     {
-        $formatted_results = [];
         foreach ($results as $result) {
             $postId = $result->post_id;
             
             $featuredImages = new FeaturedImages($postId);
-            $featuredImages->setSizes($this->sizes);
-            $featuredImages->populateResult($result);
+            $featuredImages->add($this->sizes, $result);
             $this->images[] = $featuredImages;
         }
     }
 
-    public function fetch(array $postIds, string $size = 'thumbnail')
+    public function fetch(array $postIds)
     {
         global $wpdb;
 
@@ -63,8 +69,8 @@ class FeaturedImageCollection
             p.post_content AS description,
             p.post_excerpt AS caption
         FROM $wpdb->postmeta pm1
-        INNER JOIN $wpdb->postmeta pm2 ON pm1.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attachment_metadata'
-        INNER JOIN $wpdb->postmeta pm3 ON pm1.meta_value = pm3.post_id AND pm3.meta_key = '_wp_attachment_image_alt'
+        LEFT JOIN $wpdb->postmeta pm2 ON pm1.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attachment_metadata'
+        LEFT JOIN $wpdb->postmeta pm3 ON pm1.meta_value = pm3.post_id AND pm3.meta_key = '_wp_attachment_image_alt'
         INNER JOIN $wpdb->posts p ON pm1.meta_value = p.ID
         WHERE pm1.post_id IN ($postList)
         AND pm1.meta_key = '_thumbnail_id'";

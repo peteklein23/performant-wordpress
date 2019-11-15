@@ -158,7 +158,7 @@ class PerformantTheme
      */
     public function getImageSize(string $slug) : ?ImageSizeBase
     {
-        foreach($this->imageSizeBase as $imageSize) {
+        foreach($this->imageSizes as $imageSize) {
             if ($imageSize::NAME === $slug) {
                 return $imageSize;
             }

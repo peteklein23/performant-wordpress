@@ -92,12 +92,12 @@ class PostTaxonomyCollection
     }
     
     /**
-     * Populates Taxonomies with results
+     * Populates terms from results
      *
      * @param array $results
      * @return void
      */
-    private function populateTaxonomiesFromResults(array $results) : void
+    private function populateTerms(array $results) : void
     {
         $groupedResults = $this->groupById($results);
 
@@ -145,6 +145,6 @@ class PostTaxonomyCollection
 
         $results = $wpdb->get_results($query);
 
-        $this->populateTaxonomiesFromResults($results);
+        $this->populateTerms($results);
     }
 }

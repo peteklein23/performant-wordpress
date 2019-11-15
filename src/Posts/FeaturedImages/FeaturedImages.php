@@ -5,7 +5,6 @@ namespace PeteKlein\Performant\Posts\FeaturedImages;
 class FeaturedImages
 {
     public $postId;
-    private $sizes = [];
     private $images = [];
 
     public function __construct(int $postId)
@@ -13,40 +12,25 @@ class FeaturedImages
         $this->postId = $postId;
     }
 
-    public function addSize(string $size)
-    {
-        $this->sizes[] = $size;
-
-        return $this;
-    }
-
-    public function setSizes(array $sizes)
-    {
-        foreach ($sizes as $size) {
-            $this->addSize($size);
-        }
-    }
-
-    public function get(string $size)
+    public function get(string $size) : ?FeaturedImage
     {
         if (!empty($this->images[$size])) {
             return $this->images[$size];
         }
 
-        return new FeaturedImage();
+        return null;
     }
 
-    public function list()
+    public function list() : array
     {
         return $this->images;
     }
 
-    public function populateResult(object $result = null)
+    public function add(array $sizeNames, object $result = null)
     {
         if (empty($result)) {
             return;
         }
-        $formatted_result = [];
         
         $attachment_id = $result->attachment_id;
         $meta = maybe_unserialize($result->attachment_metadata);
@@ -54,7 +38,7 @@ class FeaturedImages
         $file = $meta['file'];
         $base_url = wp_upload_dir()['baseurl'];
 
-        foreach ($this->sizes as $size) {
+        foreach ($sizeNames as $size) {
             $height = 0;
             $width = 0;
 
@@ -70,7 +54,7 @@ class FeaturedImages
             $url = apply_filters('wp_get_attachment_image_src', $image_url, $attachment_id, $size, false);
             ;
             
-            $this->images[$size] = new FeaturedImage(
+            $this->images[$size] = new FeaturedImage (
                 $url,
                 $result->title,
                 $result->caption,
