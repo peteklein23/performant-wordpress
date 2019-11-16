@@ -1,17 +1,17 @@
 <?php
 
-namespace PeteKlein\Performant\Fields;
+namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class ImageField extends FieldBase
+class ImageField extends CFFieldBase
 {
     /**
      * @inheritDoc
      */
     public function __construct(string $key, string $label, array $options = [], $defaultValue = null, bool $single = true)
     {
-        parent::__construct($key, $label, 'image', $options, $defaultValue, $single);
+        parent::__construct($key, $label, $options, $defaultValue, $single);
     }
 
     /**
@@ -26,9 +26,11 @@ class ImageField extends FieldBase
     /**
      * @inheritDoc
      */
-    public function getSelectionSQL()
+    public function getSelectionSQL() : string
     {
-        return "= '$this->key'";
+        $metaKey = $this->getPrefixedKey();
+
+        return "= '$metaKey'";
     }
 
     /**
@@ -36,11 +38,9 @@ class ImageField extends FieldBase
      */
     public function getValue(array $meta)
     {
-        foreach($meta as $m){
-            if($m->meta_key === $this->key){
-                if(!empty($m->meta_value)) {
-                    return $m->meta_value;
-                }
+        foreach ($meta as $m) {
+            if ($m->meta_key === $this->getPrefixedKey() && $m->meta_value) {
+                return $m->meta_value;
             }
         }
 

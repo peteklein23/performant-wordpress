@@ -1,10 +1,10 @@
 <?php
 
-namespace PeteKlein\Performant\Fields;
+namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class GroupField extends FieldBase
+class GroupField extends CFFieldBase
 {
     private $fields = [];
 
@@ -13,7 +13,7 @@ class GroupField extends FieldBase
      */
     public function __construct(string $key, string $label, array $fields, array $options = [], $defaultValue = null, bool $single = true)
     {
-        parent::__construct($key, $label, 'group', $options, $defaultValue, $single);
+        parent::__construct($key, $label, $options, $defaultValue, $single);
         $this->setFields($fields);
     }
 
@@ -30,9 +30,11 @@ class GroupField extends FieldBase
     /**
      * @inheritDoc
      */
-    public function getSelectionSQL()
+    public function getSelectionSQL() : string
     {
-        return "LIKE '$this->key|%'";
+        $metaKey = $this->getPrefixedKey();
+
+        return "LIKE '$metaKey|%'";
     }
 
     /**
@@ -42,7 +44,7 @@ class GroupField extends FieldBase
     {
         $value = [];
         foreach($meta as $metaResult) {
-            if (strpos($metaResult->meta_key, $this->key . '|') !== false) {
+            if (strpos($metaResult->meta_key, $this->getPrefixedKey()) !== false) {
 
                 /*
                 echo $metaResult->meta_key . ' = ' . $metaResult->meta_value;
@@ -96,17 +98,17 @@ class GroupField extends FieldBase
     private function setFields(array $fields)
     {
         $this->fields = [];
-        foreach($fields as $field){
+        foreach ($fields as $field) {
             $this->addField($field);
         }
     }
 
-    private function addField(FieldBase $field) : void
+    private function addField(CFFieldBase $field) : void
     {
         $this->fields[] = $field;
     }
 
-    private function getField($key) : ?FieldBase
+    private function getField($key) : ?CFFieldBase
     {
         foreach($this->fields as $field){
             if($field->key === $key) {

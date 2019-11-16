@@ -19,16 +19,13 @@ abstract class FieldBase
      * @param string $type - the type of field to be created
      * @param array $options - additional options to be used in field creation
      * @param mixed $defaultValue - the default value
-     * @param boolean $single - whether the field is single or not
      */
-    public function __construct(string $key, string $label, string $type, array $options = [], $defaultValue = null, bool $single = true)
+    public function __construct(string $key, string $label, array $options = [], $defaultValue = null)
     {
         $this->key = $key;
         $this->label = $label;
-        $this->type = $type;
         $this->options = $options;
         $this->defaultValue = $defaultValue;
-        $this->single = $single;
     }
 
     /**
@@ -39,7 +36,7 @@ abstract class FieldBase
     /**
      * Returns a piece of SQL to use in the WHERE clause: e.g. `"= '$this->key'"` OR `"LIKE '%$this->key%'"`
      */
-    abstract public function getSelectionSQL();
+    abstract public function getSelectionSQL() : string;
 
     /**
      * Returns the formatted value from meta results
