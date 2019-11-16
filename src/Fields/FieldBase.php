@@ -9,7 +9,6 @@ abstract class FieldBase
     public $type;
     public $options;
     public $defaultValue;
-    public $single;
 
     /**
      * Sets data for the field
@@ -20,18 +19,13 @@ abstract class FieldBase
      * @param array $options - additional options to be used in field creation
      * @param mixed $defaultValue - the default value
      */
-    public function __construct(string $key, string $label, array $options = [], $defaultValue = null)
+    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
         $this->key = $key;
         $this->label = $label;
         $this->options = $options;
         $this->defaultValue = $defaultValue;
     }
-
-    /**
-     * Executes the code to create a field in the WordPress admin 
-     */
-    abstract public function createAdminField();
 
     /**
      * Returns a piece of SQL to use in the WHERE clause: e.g. `"= '$this->key'"` OR `"LIKE '%$this->key%'"`
@@ -44,4 +38,11 @@ abstract class FieldBase
      * @param string $result - meta results for a given object
      */
     abstract public function getValue(array $meta);
+    
+    /**
+     * Check passed options and call the appropriate functions to set them
+     *
+     * @return void
+     */
+    abstract public function setAdminOptions() : void;
 }

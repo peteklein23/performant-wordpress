@@ -6,21 +6,17 @@ use Carbon_Fields\Field;
 
 class ImageField extends CFFieldBase
 {
-    /**
-     * @inheritDoc
-     */
-    public function __construct(string $key, string $label, array $options = [], $defaultValue = null, bool $single = true)
-    {
-        parent::__construct($key, $label, $options, $defaultValue, $single);
-    }
+    const DEFAULT_OPTIONS = [
+        'value_type' => 'url'
+    ];
 
     /**
      * @inheritDoc
      */
-    public function createAdminField()
+    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
-        return Field::make('image', $this->key, $this->label)
-            ->set_value_type( 'url' );
+        $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
+        parent::__construct($key, $label, $defaultValue, $mergedOptions);
     }
 
     /**
@@ -45,5 +41,32 @@ class ImageField extends CFFieldBase
         }
 
         return $this->defaultValue;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createAdminField() : \Carbon_Fields\Field\Field
+    {
+        $this->adminField =  Field::make('image', $this->key, $this->label);
+        $this->setAdminOptions();
+        
+        return $this->adminField;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setAdminOptions() : void
+    {
+        $this->setDefaultAdminOptions();
+
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'value_type':
+                    $this->adminField->set_value_type($value);
+                    break;
+            }
+        }
     }
 }

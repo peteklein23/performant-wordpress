@@ -6,25 +6,28 @@ use Carbon_Fields\Field;
 
 class GroupField extends CFFieldBase
 {
+    const DEFAULT_OPTIONS = [
+        'duplicate_groups_allowed' => false,
+        'layout' => 'grid',
+        'collapsed' => true,
+        'min' => -1,
+        'max' => -1,
+        'labels' => [
+            'singular_name' => 'entry',
+            'plural_name' => 'entries'
+        ]
+    ];
+
     private $fields = [];
 
     /**
      * @inheritDoc
      */
-    public function __construct(string $key, string $label, array $fields, array $options = [], $defaultValue = null, bool $single = true)
+    public function __construct(string $key, string $label, array $fields, $defaultValue = null, array $options = [])
     {
-        parent::__construct($key, $label, $options, $defaultValue, $single);
+        $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
+        parent::__construct($key, $label, $defaultValue, $mergedOptions);
         $this->setFields($fields);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createAdminField() : \Carbon_Fields\Field\Field
-    {
-        return Field::make('complex', $this->key, $this->label)
-            // ->set_layout('tabbed-horizontal')
-            ->add_fields($this->getAdminFields());
     }
 
     /**
@@ -95,6 +98,49 @@ class GroupField extends CFFieldBase
         return empty($value) ? $this->defaultValue : $value;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function createAdminField() : \Carbon_Fields\Field\Field
+    {
+        $this->adminField =  Field::make('complex', $this->key, $this->label)
+            ->add_fields($this->getAdminFields());
+        $this->setAdminOptions();
+
+        return $this->adminField;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setAdminOptions() : void
+    {
+        $this->setDefaultAdminOptions();
+
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'duplicate_groups_allowed':
+                    $this->adminField->set_duplicate_groups_allowed($value);
+                    break;
+                case 'layout':
+                    $this->adminField->set_layout($value);
+                    break;
+                case 'collapsed':
+                    $this->adminField->set_collapsed($value);
+                    break;
+                case 'min':
+                    $this->adminField->set_min($value);
+                    break;
+                case 'max':
+                    $this->adminField->set_max($value);
+                    break;
+                case 'labels':
+                    $this->adminField->setup_labels($value);
+                    break;
+            }
+        }
+    }
+
     private function setFields(array $fields)
     {
         $this->fields = [];
@@ -110,8 +156,8 @@ class GroupField extends CFFieldBase
 
     private function getField($key) : ?CFFieldBase
     {
-        foreach($this->fields as $field){
-            if($field->key === $key) {
+        foreach ($this->fields as $field) {
+            if ($field->key === $key) {
                 return $field;
             }
         }
@@ -126,7 +172,7 @@ class GroupField extends CFFieldBase
      */
     public function getAdminFields() : array {
         $subFields = [];
-        foreach($this->fields as $field){
+        foreach ($this->fields as $field) {
             $subFields[] = $field->createAdminField();
         }
 

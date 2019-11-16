@@ -9,17 +9,9 @@ class EditorField extends CFFieldBase
     /**
      * @inheritDoc
      */
-    public function __construct(string $key, string $label, array $options = [], $defaultValue = null)
+    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
-        parent::__construct($key, $label, $options, $defaultValue, true);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createAdminField()
-    {
-        return Field::make('rich_text', $this->key, $this->label);
+        parent::__construct($key, $label, $defaultValue, $options);
     }
 
     /**
@@ -44,5 +36,24 @@ class EditorField extends CFFieldBase
         }
 
         return $this->defaultValue;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createAdminField() : \Carbon_Fields\Field\Field
+    {
+        $this->adminField = Field::make('rich_text', $this->key, $this->label);
+        $this->setAdminOptions();
+        
+        return $this->adminField;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setAdminOptions() : void
+    {
+        $this->setDefaultAdminOptions();
     }
 }
