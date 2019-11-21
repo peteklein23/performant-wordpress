@@ -4,7 +4,7 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class TextField extends CFFieldBase
+class TextAreaField extends CFFieldBase
 {
     public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
@@ -16,7 +16,7 @@ class TextField extends CFFieldBase
      */
     public function createAdminField() : \Carbon_Fields\Field\Field
     {
-        $this->adminField = Field::make('text', $this->key, $this->label);
+        $this->adminField = Field::make('textarea', $this->key, $this->label);
         $this->setAdminOptions();
 
         return $this->adminField;
@@ -65,7 +65,7 @@ class TextField extends CFFieldBase
 
     private function verifyAttributes()
     {
-        $allowedAttributes = ['maxLength', 'pattern', 'placeholder', 'readOnly'];
+        $allowedAttributes = ['maxLength', 'minLength', 'placeholder', 'readOnly'];
         if(!empty($this->options['attributes'])) {
             $attributeKeys = array_keys($this->options['attributes']);
             foreach ($attributeKeys as $key) {

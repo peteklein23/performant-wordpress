@@ -30,9 +30,6 @@ class GroupField extends CFFieldBase
         $this->setFields($fields);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getSelectionSQL() : string
     {
         $metaKey = $this->getPrefixedKey();

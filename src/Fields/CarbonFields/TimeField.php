@@ -4,11 +4,34 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class TextField extends CFFieldBase
+class TimeField extends CFFieldBase
 {
-    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
-    {
+    private $storageFormat;
+    private $pickerOptions;
+
+    /**
+     * Undocumented function
+     *
+     * @param string $key
+     * @param string $label
+     * @param [type] $defaultValue
+     * @param string $storageFormat
+     * @param array $pickerOptions - @see https://flatpickr.js.org/options/
+     * @param array $options
+     */
+
+     // TODO: implement set_input_format - https://docs.carbonfields.net/#/fields/date
+    public function __construct(
+        string $key, 
+        string $label, 
+        $defaultValue = null, 
+        string $storageFormat = 'H:i:s',
+        array $pickerOptions = [], 
+        array $options = []
+    ) {
         parent::__construct($key, $label, $defaultValue, $options);
+        $this->storageFormat = $storageFormat;
+        $this->pickerOptions = $pickerOptions;
     }
 
     /**
@@ -16,7 +39,7 @@ class TextField extends CFFieldBase
      */
     public function createAdminField() : \Carbon_Fields\Field\Field
     {
-        $this->adminField = Field::make('text', $this->key, $this->label);
+        $this->adminField = Field::make('time', $this->key, $this->label);
         $this->setAdminOptions();
 
         return $this->adminField;
@@ -52,6 +75,8 @@ class TextField extends CFFieldBase
     public function setAdminOptions() : void
     {
         $this->setDefaultAdminOptions();
+        $this->adminField->set_storage_format($this->storageFormat);
+        $this->adminField->set_picker_options($this->pickerOptions);
         $this->verifyAttributes();
 
         foreach ($this->options as $option => $value) {
@@ -65,7 +90,7 @@ class TextField extends CFFieldBase
 
     private function verifyAttributes()
     {
-        $allowedAttributes = ['maxLength', 'pattern', 'placeholder', 'readOnly'];
+        $allowedAttributes = ['placeholder', 'readOnly'];
         if(!empty($this->options['attributes'])) {
             $attributeKeys = array_keys($this->options['attributes']);
             foreach ($attributeKeys as $key) {

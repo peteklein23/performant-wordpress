@@ -4,11 +4,16 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class TextField extends CFFieldBase
+class ColorField extends CFFieldBase
 {
-    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
+    private $colorOptions = [];
+    private $alphaEnabled = true;
+
+    public function __construct(string $key, string $label, $defaultValue = null, array $colorOptions = [], bool $alphaEnabled = true, array $options = [])
     {
         parent::__construct($key, $label, $defaultValue, $options);
+        $this->colorOptions = $colorOptions;
+        $this->alphaEnabled = $alphaEnabled;
     }
 
     /**
@@ -16,8 +21,9 @@ class TextField extends CFFieldBase
      */
     public function createAdminField() : \Carbon_Fields\Field\Field
     {
-        $this->adminField = Field::make('text', $this->key, $this->label);
+        $this->adminField = Field::make('color', $this->key, $this->label);
         $this->setAdminOptions();
+        $this->setColorOptions();
 
         return $this->adminField;
     }
@@ -52,7 +58,6 @@ class TextField extends CFFieldBase
     public function setAdminOptions() : void
     {
         $this->setDefaultAdminOptions();
-        $this->verifyAttributes();
 
         foreach ($this->options as $option => $value) {
             switch ($option) {
@@ -63,16 +68,9 @@ class TextField extends CFFieldBase
         }
     }
 
-    private function verifyAttributes()
+    private function setColorOptions() : void
     {
-        $allowedAttributes = ['maxLength', 'pattern', 'placeholder', 'readOnly'];
-        if(!empty($this->options['attributes'])) {
-            $attributeKeys = array_keys($this->options['attributes']);
-            foreach ($attributeKeys as $key) {
-                if (!in_array($key, $allowedAttributes)) {
-                    throw new \Exception("Attribute $key is not allowed.");
-                }
-            }
-        }
+        $this->adminField->set_palette($this->colorOptions);
+        $this->adminField->set_alpha_enabled($this->alphaEnabled);
     }
 }

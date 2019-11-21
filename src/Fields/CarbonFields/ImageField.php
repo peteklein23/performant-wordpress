@@ -10,9 +10,6 @@ class ImageField extends CFFieldBase
         'value_type' => 'url'
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
         $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
