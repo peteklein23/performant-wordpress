@@ -65,7 +65,7 @@ class TextField extends CFFieldBase
 
     private function verifyAttributes()
     {
-        $allowedAttributes = ['maxLength', 'pattern', 'placeholder', 'readOnly'];
+        $allowedAttributes = ['min', 'max', 'type', 'maxLength', 'pattern', 'placeholder', 'readOnly'];
         if(!empty($this->options['attributes'])) {
             $attributeKeys = array_keys($this->options['attributes']);
             foreach ($attributeKeys as $key) {

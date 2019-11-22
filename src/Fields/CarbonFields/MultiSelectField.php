@@ -3,13 +3,16 @@
 namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
-use Embed\Embed;
 
-class OEmbedField extends CFFieldBase
+// TODO: standardize output with Group
+class MultiSelectField extends CFFieldBase
 {
-    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
+    private $selectOptions = [];
+
+    public function __construct(string $key, string $label, $defaultValue = null, array $selectOptions = [], array $options = [])
     {
         parent::__construct($key, $label, $defaultValue, $options);
+        $this->selectOptions = $selectOptions;
     }
 
     /**
@@ -17,8 +20,9 @@ class OEmbedField extends CFFieldBase
      */
     public function createAdminField() : \Carbon_Fields\Field\Field
     {
-        $this->adminField = Field::make('oembed', $this->key, $this->label);
+        $this->adminField = Field::make('set', $this->key, $this->label);
         $this->setAdminOptions();
+        $this->setSelectOptions();
 
         return $this->adminField;
     }
@@ -40,8 +44,7 @@ class OEmbedField extends CFFieldBase
     {
         foreach ($meta as $m) {
             if ($m->meta_key === $this->getPrefixedKey() && $m->meta_value) {
-                $embed = Embed::create($m->meta_value);
-                return $embed->code;
+                return $m->meta_value;
             }
         }
 
@@ -54,5 +57,10 @@ class OEmbedField extends CFFieldBase
     public function setAdminOptions() : void
     {
         $this->setDefaultAdminOptions();
+    }
+
+    private function setSelectOptions() : void
+    {
+        $this->adminField->set_options($this->selectOptions);
     }
 }
