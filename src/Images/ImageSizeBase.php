@@ -2,7 +2,9 @@
 
 namespace PeteKlein\Performant\Images;
 
-class ImageSizeBase
+use PeteKlein\Performant\Patterns\Singleton;
+
+abstract class ImageSizeBase extends Singleton
 {
     const ALLOWED_X_CROPS = ['left', 'center', 'right'];
     const ALLOWED_Y_CROPS = ['top', 'center', 'bottom'];

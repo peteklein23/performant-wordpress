@@ -13,6 +13,8 @@ abstract class TaxonomyBase extends Singleton
     const TAG_TYPE = 'tag';
     const CATEGORY_TYPE = 'category';
 
+    abstract public function register() : void;
+
     protected function __construct()
     {
         if (empty(static::TAXONOMY)) {
@@ -98,7 +100,7 @@ abstract class TaxonomyBase extends Singleton
      * @see https://codex.wordpress.org/Function_Reference/register_taxonomy
      * @return void
      */
-    protected function register (
+    protected function registerTaxonomy (
         array $postTypes = [],
         array $args = []
     ) : void {

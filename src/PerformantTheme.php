@@ -3,24 +3,17 @@
 namespace PeteKlein\Performant;
 
 use PeteKlein\Performant\Posts\PostTypeBase;
-use PeteKlein\Performant\Taxonomies\TaxonomyBase;
-use PeteKlein\Performant\Images\ImageSizeBase;
 
 class PerformantTheme
 {
-    private $postTypes = [];
-    private $taxonomies = [];
-    private $imageSizes = [];
-
     public function __construct()
     {
-        $this->registerHooks();
+        $this->registerDefaultHooks();
     }
 
-    public function registerHooks()
+    public function registerDefaultHooks()
     {
         add_action('after_setup_theme', [$this, 'initTheme']);
-        add_action('init', [$this, 'afterInitTheme']);
         add_action('wp_enqueue_scripts', [$this, 'registerScripts']);
         add_action('wp_enqueue_scripts', [$this, 'registerStyles']);
         add_action('widgets_init', [$this, 'registerSidebars']);
@@ -30,25 +23,14 @@ class PerformantTheme
         add_action('admin_enqueue_scripts', [$this, 'registerAdminStyles']);
     }
 
-    public function beforeInitTheme()
-    {
-    }
-
     public function initTheme()
     {
-        $this->beforeInitTheme();
         $this->addThemeSupport();
-        $this->initCarbonFields();
         $this->registerImageSizes();
         $this->registerTaxonomies();
         $this->registerPostTypes();
         $this->registerShortcodes();
         $this->registerNavMenus();
-        $this->afterInitTheme();
-    }
-
-    public function afterInitTheme()
-    {
     }
     
     public function addThemeSupport()
@@ -59,27 +41,11 @@ class PerformantTheme
         add_theme_support('html5', ['search-form']);
     }
 
-    // TODO: move carbon fields into it's own concept and out of theme
-    public function initCarbonFields()
-    {
-        \Carbon_Fields\Carbon_Fields::boot();
-    }
-
     /**
      * Register your post types here
      */
     public function registerPostTypes()
     {
-    }
-
-    /**
-     * Add a post type
-     * 
-     * @return void
-     */
-    public function addPostType(PostTypeBase $postType) : void
-    {
-        $this->postTypes[] = $postType;
     }
 
     /**
@@ -99,36 +65,10 @@ class PerformantTheme
     }
 
     /**
-     * Register your taxonomies here
+     * Register your taxonomies with `$this->setTaxonomies`
      */
-    public function registerTaxonomies()
+    protected function registerTaxonomies()
     {
-    }
-
-    /**
-     * Add a taxonomy
-     * 
-     * @return void
-     */
-    public function addTaxonomy(TaxonomyBase $taxonomy) : void
-    {
-        $this->taxonomies[] = $taxonomy;
-    }
-
-    /**
-     * return a registered taxonomy
-     *
-     * @param string $slug
-     */
-    public function getTaxonomy(string $slug) : ?TaxonomyBase
-    {
-        foreach($this->taxonomies as $taxonomy) {
-            if ($taxonomy::TAXONOMY === $slug) {
-                return $taxonomy;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -136,36 +76,8 @@ class PerformantTheme
      *
      * @return void
      */
-    public function registerImageSizes() : void 
+    protected function registerImageSizes() : void 
     {}
-
-    /**
-     * Add image size to the list of image sizes
-     *
-     * @param ImageSizeBase $imageSize
-     * @return void
-     */
-    public function addImageSize(ImageSizeBase $imageSize) : void
-    {
-        $this->imageSizes[] = $imageSize;
-    }
-
-    /**
-     * return a registered image size
-     *
-     * @param string $slug
-     * @return ImageSizeBase|null
-     */
-    public function getImageSize(string $slug) : ?ImageSizeBase
-    {
-        foreach($this->imageSizes as $imageSize) {
-            if ($imageSize::NAME === $slug) {
-                return $imageSize;
-            }
-        }
-
-        return null;
-    }
 
     /**
      * Register your shortcodes here

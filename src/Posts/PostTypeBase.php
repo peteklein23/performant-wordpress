@@ -4,13 +4,15 @@ namespace PeteKlein\Performant\Posts;
 
 use PeteKlein\Performant\Fields\FieldBase;
 use PeteKlein\Performant\Fields\FieldGroupBase;
+use PeteKlein\Performant\Images\ImageSizeBase;
+use PeteKlein\Performant\Patterns\Singleton;
 use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
-use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaBox;
+use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
 use PeteKlein\Performant\Taxonomies\TaxonomyBase;
 
-abstract class PostTypeBase
+abstract class PostTypeBase extends Singleton
 {
     /**
      * post type slug to be overridden in inheriting class
@@ -25,7 +27,7 @@ abstract class PostTypeBase
     /**
      * Registers the post type by calling PostType->register()
      */
-    abstract public function registerPostType();
+    abstract public function register();
 
     public function __construct()
     {
@@ -95,7 +97,7 @@ abstract class PostTypeBase
      * @param array $args
      * @return void
      */
-    protected function register(array $args = [])
+    protected function registerPostType(array $args = [])
     {
         $registeredPostType = register_post_type(
             static::POST_TYPE,
@@ -249,9 +251,15 @@ abstract class PostTypeBase
         }
     }
 
-    protected function addFeaturedImageSize(string $imageSize) : PostTypeBase
+    /**
+     * Add image size to the featured image collection
+     *
+     * @param ImageSizeBase $imageSize
+     * @return PostTypeBase
+     */
+    protected function addFeaturedImageSize(ImageSizeBase $imageSize) : PostTypeBase
     {
-        $this->featuredImages->addSize($imageSize);
+        $this->featuredImages->addSize($imageSize::SIZE);
 
         return $this;
     }
