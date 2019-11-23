@@ -3,7 +3,7 @@
 namespace PeteKlein\Performant\Posts;
 
 use PeteKlein\Performant\Fields\FieldBase;
-use PeteKlein\Performant\Images\ImageSizeBase;
+use PeteKlein\Performant\Fields\FieldGroupBase;
 use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Meta\PostMetaBox;
@@ -20,9 +20,7 @@ abstract class PostTypeBase
     const PRIVATE_TYPE = 'private';
 
     protected $meta;
-    protected $metaBoxes = [];
     protected $taxonomies;
-    // protected $featuredImages;
 
     /**
      * Registers the post type by calling PostType->register()
@@ -32,12 +30,14 @@ abstract class PostTypeBase
     public function __construct()
     {
         if (empty(static::POST_TYPE)) {
-            throw new \Exception(__('You must set the constant POST_TYPE to inherit from PostTypeBase', 'performant'));
+            throw new \Exception(__('You must set the constant POST_TYPE in your inheriting class', 'performant'));
         }
 
         $this->meta = new PostMetaCollection();
         $this->taxonomies = new PostTaxonomyCollection();
         $this->featuredImages = new FeaturedImageCollection();
+
+        $this->registerPostType();
     }
 
     /**
@@ -50,8 +50,12 @@ abstract class PostTypeBase
      * @param string $icon the icon, e.g. 'dashicons-admin-post'
      * @return array registration args
      */
-    public static function getRegistrationArgs(string $argType, string $singularLabel, string $pluralLabel, string $icon)
-    {
+    public static function getRegistrationArgs(
+        string $argType, 
+        string $singularLabel, 
+        string $pluralLabel, 
+        string $icon = 'dashicons-admin-post'
+    ) {
         $defaultArgs = [
             'labels' => self::getLabels($singularLabel, $pluralLabel),
             'menu_icon' => $icon
@@ -66,7 +70,7 @@ abstract class PostTypeBase
             ]);
         }
 
-        if ($argType === self::PRIVATE_ARG_TYPE) {
+        if ($argType === self::PRIVATE_TYPE) {
             return array_merge($defaultArgs, [
                 'public' => false,
                 'has_archive' => false,
@@ -137,32 +141,37 @@ abstract class PostTypeBase
     }
 
     /**
-     * Registers the post type, meta and taxonomies
+     * Set field groups
      *
-     * @param $taxonomies - array of taxonomies to register with this post type
+     * @param array $fieldGroups
+     * @return void
      */
-    public function create(array $taxonomies = []) : PostTypeBase
+    protected function setFieldGroups(array $fieldGroups) : void
     {
-        $this->registerPostType();
-        $this->addTaxonomies($taxonomies);
-        $this->registerMeta();
-        $this->registerMetaBoxes();
-        $this->registerFeaturedImageSizes();
-
-        return $this;
+        if (empty($fieldGroups)) {
+            return;
+        }
+        foreach ($fieldGroups as $fieldGroup) {
+            $this->addFieldGroup($fieldGroup);
+        }
     }
 
     /**
-     * Register your meta fields here
+     * Create a meta box and add fields 
+     *
+     * @param string $label
+     * @param array $metaKeys
+     * @return void
      */
-    protected function registerMeta()
-    { }
-
-    /**
-     * Add meta to meta boxes to edit them in the admin here
-     */
-    protected function registerMetaBoxes()
-    { }
+    protected function addFieldGroup(FieldGroupBase $fieldGroup) : void
+    {
+        $name = $fieldGroup->getName();
+        $metaBox = new PostMetaBox(static::POST_TYPE, $name);
+        foreach ($fieldGroup->listFields() as $field) {
+            $this->meta->addField($field);
+            $metaBox->addAdminField($field->createAdminField());
+        }
+    }
 
     /**
      * Adds a field to the meta collection
@@ -182,30 +191,11 @@ abstract class PostTypeBase
      * @param array $postIds
      * @return void
      */
-    public function listMeta($postIds = [])
+    public function listMeta(array $postIds = [])
     {
         $this->meta->fetch($postIds);
 
         return $this->meta->list();
-    }
-
-    /**
-     * Create a meta box to 
-     *
-     * @param string $label
-     * @param array $metaKeys
-     * @return void
-     */
-    protected function addMetaBox(string $label, array $metaKeys) : void
-    {
-        $metaBox = new PostMetaBox(static::POST_TYPE, $label);
-        foreach ($metaKeys as $key) {
-            $field = $this->meta->getField($key);
-            if (!empty($field)) {
-                $metaBox->addField($field->createAdminField());
-            }
-        }
-        $this->metaBoxes[] = $metaBox;
     }
 
     /**
@@ -214,7 +204,7 @@ abstract class PostTypeBase
      * @param array $taxonomies - array of taxonomies
      * @return void
      */
-    private function addTaxonomies(array $taxonomies = []) : void
+    protected function setTaxonomies(array $taxonomies) : void
     {
         if (empty($taxonomies)) {
             return;
@@ -229,7 +219,7 @@ abstract class PostTypeBase
      *
      * @param TaxonomyBase $taxonomy
      */
-    protected function addTaxonomy(TaxonomyBase $taxonomy = null) : PostTypeBase
+    private function addTaxonomy(TaxonomyBase $taxonomy = null) : PostTypeBase
     {
         $this->taxonomies->addTaxonomy($taxonomy);
 
@@ -242,7 +232,7 @@ abstract class PostTypeBase
      * @param array $postIds
      * @return void
      */
-    public function listTaxonomies($postIds = [])
+    public function listTaxonomies(array $postIds = [])
     {
         $this->taxonomies->fetch($postIds);
 
@@ -252,8 +242,12 @@ abstract class PostTypeBase
     /**
      * Register your featured image sizes here
      */
-    protected function registerFeaturedImageSizes()
-    { }
+    protected function setFeaturedImageSizes(array $imageSizes) : void
+    {
+        foreach ($imageSizes as $imageSize) {
+            $this->addFeaturedImageSize($imageSize);
+        }
+    }
 
     protected function addFeaturedImageSize(string $imageSize) : PostTypeBase
     {
@@ -262,7 +256,7 @@ abstract class PostTypeBase
         return $this;
     }
 
-    public function listFeatureImages($postIds = [])
+    public function listFeatureImages(array $postIds = [])
     {
         $this->featuredImages->fetch($postIds);
 

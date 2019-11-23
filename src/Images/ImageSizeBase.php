@@ -15,8 +15,8 @@ class ImageSizeBase
 
     public function __construct(int $width, int $height, bool $crop = false, string $cropX = null, string $cropY = null)
     {
-        if (empty(static::NAME)) {
-            throw new \Exception(__('You must set the constant NAME to inherit from ImageSizeBase', 'performant'));
+        if (empty(static::SIZE)) {
+            throw new \Exception(__('You must set the constant SIZE in a class that inherits from ImageSizeBase', 'performant'));
         }
 
         $this->width = $width;
@@ -62,11 +62,11 @@ class ImageSizeBase
     public function register() : ImageSizeBase
     {
         if (!empty($this->cropX) && !empty($this->cropY)) {
-            add_image_size(static::NAME, $this->width, $this->height, [$this->cropX, $this->cropY]);
+            add_image_size(static::SIZE, $this->width, $this->height, [$this->cropX, $this->cropY]);
             
             return $this;
         }
-        add_image_size(static::NAME, $this->width, $this->height, $this->crop);
+        add_image_size(static::SIZE, $this->width, $this->height, $this->crop);
 
         return $this;
     }

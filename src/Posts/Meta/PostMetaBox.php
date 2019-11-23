@@ -14,7 +14,7 @@ class PostMetaBox
             ->where('post_type', '=', $postType);
     }
 
-    public function addField($field)
+    public function addAdminField($field)
     {
         $this->container->add_fields([$field]);
 
