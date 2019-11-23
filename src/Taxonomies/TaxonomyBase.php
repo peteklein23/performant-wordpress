@@ -2,7 +2,9 @@
 
 namespace PeteKlein\Performant\Taxonomies;
 
-abstract class TaxonomyBase
+use PeteKlein\Performant\Patterns\Singleton;
+
+abstract class TaxonomyBase extends Singleton
 {
     /**
      * The taxonomy name
@@ -11,17 +13,7 @@ abstract class TaxonomyBase
     const TAG_TYPE = 'tag';
     const CATEGORY_TYPE = 'category';
 
-    /**
-     * Registers the taxonomy, usually by calling TaxonomyBase->register
-     *
-     * @return void
-     */
-    abstract public function registerTaxonomy() : void;
-
-    /**
-     * Constructor that checks that the TAXONOMY constant is set on the child
-     */
-    public function __construct()
+    protected function __construct()
     {
         if (empty(static::TAXONOMY)) {
             throw new \Exception(
@@ -67,23 +59,6 @@ abstract class TaxonomyBase
     }
 
     /**
-     * Register taxonomies and connect object types
-     *
-     * @param array $postTypes - post types, nav_menu_items, etc
-     * @param array $args - taxonomy registration args
-     * @see https://codex.wordpress.org/Function_Reference/register_taxonomy
-     * @return void
-     */
-    protected function register (
-        array $postTypes = [],
-        array $args = []
-    ) : void {
-        register_taxonomy(static::TAXONOMY, $postTypes, $args);
-        
-        $this->connectToPostTypes($postTypes);
-    }
-
-    /**
      * Gets the default labels for registering a data type
      *
      * @param string $singularLabel
@@ -116,27 +91,17 @@ abstract class TaxonomyBase
     }
 
     /**
-     * Makes the taxonomy available to other post types
+     * Register taxonomies and connect object types
      *
-     * @param array $objectTypes
+     * @param array $postTypes - post types, nav_menu_items, etc
+     * @param array $args - taxonomy registration args
+     * @see https://codex.wordpress.org/Function_Reference/register_taxonomy
      * @return void
      */
-    private function connectToPostTypes(array $objectTypes) : void
-    {
-        foreach ($objectTypes as $objectType) {
-            register_taxonomy_for_object_type(self::TAXONOMY, $objectType);
-        }
-    }
-
-    /**
-     * Registers the taxonomy and does other setup tasks
-     *
-     * @return void
-     */
-    public function create() : TaxonomyBase
-    {
-        $this->registerTaxonomy();
-
-        return $this;
+    protected function register (
+        array $postTypes = [],
+        array $args = []
+    ) : void {
+        register_taxonomy(static::TAXONOMY, $postTypes, $args);
     }
 }
