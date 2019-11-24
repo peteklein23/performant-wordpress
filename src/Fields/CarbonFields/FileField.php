@@ -6,15 +6,39 @@ use Carbon_Fields\Field;
 
 class FileField extends CFFieldBase
 {
-    const DEFAULT_OPTIONS = [
-        'types' => ['audio', 'video', 'image'],
-        'value_type' => 'url'
-    ];
+    public function __construct(
+        string $key, 
+        string $label, 
+        string $defaultValue = null,
+        array $options = []
+    ) {
+        $fieldDefaults = [
+            'type' => ['audio', 'video', 'image'],
+            'value_type' => 'url'
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
 
-    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createAdmin() : void
     {
-        $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
-        parent::__construct($key, $label, $defaultValue, $mergedOptions);
+        $this->adminField = Field::make('file', $this->key, $this->label);
+        $this->setSharedOptions();
+
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'type':
+                    $this->adminField->set_type($value);
+                    break;
+                case 'value_type':
+                    $this->adminField->set_value_type($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -39,35 +63,5 @@ class FileField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createAdminField() : \Carbon_Fields\Field\Field
-    {
-        $this->adminField =  Field::make('file', $this->key, $this->label);
-        $this->setAdminOptions();
-        
-        return $this->adminField;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'value_type':
-                    $this->adminField->set_value_type($value);
-                    break;
-                case 'types':
-                    $this->adminField->set_type($value);
-                    break;
-            }
-        }
     }
 }

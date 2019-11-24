@@ -4,27 +4,37 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-// TODO: standardize output with Group
 class MultiSelectField extends CFFieldBase
 {
-    private $selectOptions = [];
+    public function __construct(
+        string $key, 
+        string $label, 
+        $defaultValue = null,
+        array $options = []
+    ) {
+        $fieldDefaults = [
+            'options' => []
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
 
-    public function __construct(string $key, string $label, $defaultValue = null, array $selectOptions = [], array $options = [])
-    {
-        parent::__construct($key, $label, $defaultValue, $options);
-        $this->selectOptions = $selectOptions;
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
     }
 
     /**
      * @inheritDoc
      */
-    public function createAdminField() : \Carbon_Fields\Field\Field
+    public function createAdmin() : void
     {
-        $this->adminField = Field::make('set', $this->key, $this->label);
-        $this->setAdminOptions();
-        $this->setSelectOptions();
+        $this->adminField = Field::make('multiselect', $this->key, $this->label);
+        $this->setSharedOptions();
 
-        return $this->adminField;
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'options':
+                    $this->adminField->set_options($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -49,18 +59,5 @@ class MultiSelectField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-    }
-
-    private function setSelectOptions() : void
-    {
-        $this->adminField->set_options($this->selectOptions);
     }
 }

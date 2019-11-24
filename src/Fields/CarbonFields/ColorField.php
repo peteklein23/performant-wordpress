@@ -6,11 +6,10 @@ use Carbon_Fields\Field;
 
 class ColorField extends CFFieldBase
 {
-
     public function __construct(
         string $key, 
         string $label, 
-        $defaultValue = null,
+        string $defaultValue = null,
         array $options = []
     ) {
         $fieldDefaults = [

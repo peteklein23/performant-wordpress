@@ -6,24 +6,35 @@ use Carbon_Fields\Field;
 
 class SelectField extends CFFieldBase
 {
-    private $selectOptions = [];
+    public function __construct(
+        string $key, 
+        string $label, 
+        $defaultValue = null,
+        array $options = []
+    ) {
+        $fieldDefaults = [
+            'options' => []
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
 
-    public function __construct(string $key, string $label, $defaultValue = null, array $selectOptions = [], array $options = [])
-    {
-        parent::__construct($key, $label, $defaultValue, $options);
-        $this->selectOptions = $selectOptions;
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
     }
 
     /**
      * @inheritDoc
      */
-    public function createAdminField() : \Carbon_Fields\Field\Field
+    public function createAdmin() : void
     {
         $this->adminField = Field::make('select', $this->key, $this->label);
-        $this->setAdminOptions();
-        $this->setSelectOptions();
+        $this->setSharedOptions();
 
-        return $this->adminField;
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'options':
+                    $this->adminField->set_options($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -48,26 +59,5 @@ class SelectField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'value_type':
-                    $this->adminField->set_value_type($value);
-                    break;
-            }
-        }
-    }
-
-    private function setSelectOptions() : void
-    {
-        $this->adminField->set_options($this->selectOptions);
     }
 }

@@ -6,43 +6,40 @@ use Carbon_Fields\Field;
 
 class DateField extends CFFieldBase
 {
-    private $storageFormat;
-    private $pickerOptions;
-
-    /**
-     * Undocumented function
-     *
-     * @param string $key
-     * @param string $label
-     * @param [type] $defaultValue
-     * @param string $storageFormat
-     * @param array $pickerOptions - @see https://flatpickr.js.org/options/
-     * @param array $options
-     */
-
-     // TODO: implement set_input_format - https://docs.carbonfields.net/#/fields/date
+    // TODO: implement set_input_format - https://docs.carbonfields.net/#/fields/date
     public function __construct(
         string $key, 
         string $label, 
-        $defaultValue = null, 
-        string $storageFormat = 'Y-m-d',
-        array $pickerOptions = [], 
+        $defaultValue = null,
         array $options = []
     ) {
-        parent::__construct($key, $label, $defaultValue, $options);
-        $this->storageFormat = $storageFormat;
-        $this->pickerOptions = $pickerOptions;
+        $fieldDefaults = [
+            'storage_format' => 'Y-m-d',
+            'picker_options' => []
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
+
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
     }
 
     /**
      * @inheritDoc
      */
-    public function createAdminField() : \Carbon_Fields\Field\Field
+    public function createAdmin() : void
     {
         $this->adminField = Field::make('date', $this->key, $this->label);
-        $this->setAdminOptions();
+        $this->setSharedOptions();
 
-        return $this->adminField;
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'storage_format':
+                    $this->adminField->set_storage_format($value);
+                    break;
+                case 'picker_options':
+                    $this->adminField->set_picker_options($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -67,37 +64,5 @@ class DateField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-        $this->adminField->set_storage_format($this->storageFormat);
-        $this->adminField->set_picker_options($this->pickerOptions);
-        $this->verifyAttributes();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'value_type':
-                    $this->adminField->set_value_type($value);
-                    break;
-            }
-        }
-    }
-
-    private function verifyAttributes()
-    {
-        $allowedAttributes = ['placeholder', 'readOnly'];
-        if(!empty($this->options['attributes'])) {
-            $attributeKeys = array_keys($this->options['attributes']);
-            foreach ($attributeKeys as $key) {
-                if (!in_array($key, $allowedAttributes)) {
-                    throw new \Exception("Attribute $key is not allowed.");
-                }
-            }
-        }
     }
 }

@@ -4,16 +4,17 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class TextAreaField extends CFFieldBase
+class SetField extends CFFieldBase
 {
     public function __construct(
         string $key, 
         string $label, 
-        string $defaultValue = null,
+        $defaultValue = null,
         array $options = []
     ) {
         $fieldDefaults = [
-            'rows' => 5
+            'options' => [],
+            'limit' => 0
         ];
         $combinedOptions = $this->combineOptions($fieldDefaults, $options);
 
@@ -25,13 +26,16 @@ class TextAreaField extends CFFieldBase
      */
     public function createAdmin() : void
     {
-        $this->adminField = Field::make('textarea', $this->key, $this->label);
+        $this->adminField = Field::make('set', $this->key, $this->label);
         $this->setSharedOptions();
 
         foreach ($this->options as $option => $value) {
             switch ($option) {
-                case 'rows':
-                    $this->adminField->set_rows($value);
+                case 'options':
+                    $this->adminField->set_options($value);
+                    break;
+                case 'limit':
+                    $this->adminField->limit_options($value);
                     break;
             }
         }

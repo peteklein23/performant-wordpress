@@ -4,7 +4,7 @@ namespace PeteKlein\Performant\Fields\CarbonFields;
 
 use Carbon_Fields\Field;
 
-class TextAreaField extends CFFieldBase
+class RichTextField extends CFFieldBase
 {
     public function __construct(
         string $key, 
@@ -12,12 +12,7 @@ class TextAreaField extends CFFieldBase
         string $defaultValue = null,
         array $options = []
     ) {
-        $fieldDefaults = [
-            'rows' => 5
-        ];
-        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
-
-        parent::__construct($key, $label, $defaultValue, $combinedOptions);
+        parent::__construct($key, $label, $defaultValue, $options);
     }
 
     /**
@@ -25,16 +20,8 @@ class TextAreaField extends CFFieldBase
      */
     public function createAdmin() : void
     {
-        $this->adminField = Field::make('textarea', $this->key, $this->label);
+        $this->adminField = Field::make('rich_text', $this->key, $this->label);
         $this->setSharedOptions();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'rows':
-                    $this->adminField->set_rows($value);
-                    break;
-            }
-        }
     }
 
     /**

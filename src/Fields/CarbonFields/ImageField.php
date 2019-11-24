@@ -6,14 +6,35 @@ use Carbon_Fields\Field;
 
 class ImageField extends CFFieldBase
 {
-    const DEFAULT_OPTIONS = [
-        'value_type' => 'url'
-    ];
+    public function __construct(
+        string $key, 
+        string $label, 
+        string $defaultValue = null,
+        array $options = []
+    ) {
+        $fieldDefaults = [
+            'value_type' => 'url'
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
 
-    public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createAdmin() : void
     {
-        $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
-        parent::__construct($key, $label, $defaultValue, $mergedOptions);
+        $this->adminField = Field::make('image', $this->key, $this->label);
+        $this->setSharedOptions();
+
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'value_type':
+                    $this->adminField->set_value_type($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -38,32 +59,5 @@ class ImageField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createAdminField() : \Carbon_Fields\Field\Field
-    {
-        $this->adminField =  Field::make('image', $this->key, $this->label);
-        $this->setAdminOptions();
-        
-        return $this->adminField;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'value_type':
-                    $this->adminField->set_value_type($value);
-                    break;
-            }
-        }
     }
 }
