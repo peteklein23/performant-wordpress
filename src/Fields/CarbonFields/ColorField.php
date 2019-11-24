@@ -6,26 +6,40 @@ use Carbon_Fields\Field;
 
 class ColorField extends CFFieldBase
 {
-    private $colorOptions = [];
-    private $alphaEnabled = true;
 
-    public function __construct(string $key, string $label, $defaultValue = null, array $colorOptions = [], bool $alphaEnabled = true, array $options = [])
-    {
-        parent::__construct($key, $label, $defaultValue, $options);
-        $this->colorOptions = $colorOptions;
-        $this->alphaEnabled = $alphaEnabled;
+    public function __construct(
+        string $key, 
+        string $label, 
+        $defaultValue = null,
+        array $options = []
+    ) {
+        $fieldDefaults = [
+            'colors' => [],
+            'set_alpha' => false
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
+
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
     }
 
     /**
      * @inheritDoc
      */
-    public function createAdminField() : \Carbon_Fields\Field\Field
+    public function createAdmin() : void
     {
         $this->adminField = Field::make('color', $this->key, $this->label);
-        $this->setAdminOptions();
-        $this->setColorOptions();
+        $this->setSharedOptions();
 
-        return $this->adminField;
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case 'colors':
+                    $this->adminField->set_palette($value);
+                    break;
+                case 'alpha_enabled':
+                    $this->adminField->set_alpha_enabled($value);
+                    break;
+            }
+        }
     }
 
     /**
@@ -50,27 +64,5 @@ class ColorField extends CFFieldBase
         }
 
         return $this->defaultValue;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
-
-        foreach ($this->options as $option => $value) {
-            switch ($option) {
-                case 'value_type':
-                    $this->adminField->set_value_type($value);
-                    break;
-            }
-        }
-    }
-
-    private function setColorOptions() : void
-    {
-        $this->adminField->set_palette($this->colorOptions);
-        $this->adminField->set_alpha_enabled($this->alphaEnabled);
     }
 }

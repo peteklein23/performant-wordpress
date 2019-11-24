@@ -7,7 +7,6 @@ use PeteKlein\Performant\Fields\FieldGroupBase;
 use PeteKlein\Performant\Images\ImageSizeBase;
 use PeteKlein\Performant\Patterns\Singleton;
 use PeteKlein\Performant\Posts\FeaturedImages\FeaturedImageCollection;
-use PeteKlein\Performant\Posts\Meta\PostMetaBox;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
 use PeteKlein\Performant\Taxonomies\TaxonomyBase;
@@ -28,6 +27,11 @@ abstract class PostTypeBase extends Singleton
      * Registers the post type by calling PostType->register()
      */
     abstract public function register();
+
+    /**
+     * Creates the container for fields in the admin
+     */
+    abstract public function createAdminContainer(FieldGroupBase $fieldGroup);
 
     public function __construct()
     {
@@ -154,37 +158,22 @@ abstract class PostTypeBase extends Singleton
             return;
         }
         foreach ($fieldGroups as $fieldGroup) {
-            $this->addFieldGroup($fieldGroup);
-        }
-    }
-
-    /**
-     * Create a meta box and add fields 
-     *
-     * @param string $label
-     * @param array $metaKeys
-     * @return void
-     */
-    protected function addFieldGroup(FieldGroupBase $fieldGroup) : void
-    {
-        $name = $fieldGroup->getName();
-        $metaBox = new PostMetaBox(static::POST_TYPE, $name);
-        foreach ($fieldGroup->listFields() as $field) {
-            $this->meta->addField($field);
-            $metaBox->addAdminField($field->createAdminField());
+            $this->createAdminContainer($fieldGroup);
+            $this->addMeta($fieldGroup);
         }
     }
 
     /**
      * Adds a field to the meta collection
      *
-     * @param FieldBase $field
+     * @param FieldGroupBase $fieldGroup
+     * @return void
      */
-    protected function addMeta(FieldBase $field) : PostTypeBase
+    protected function addMeta(FieldGroupBase $fieldGroup) : void
     {
-        $this->meta->addField($field);
-
-        return $this;
+        foreach ($fieldGroup->listFields() as $field) {
+            $this->meta->addField($field);
+        }
     }
 
     /**

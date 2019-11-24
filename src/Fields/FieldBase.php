@@ -16,8 +16,8 @@ abstract class FieldBase
      * @param string $key - the meta key
      * @param string $label - the label to be shown in the WordPress admin
      * @param string $type - the type of field to be created
-     * @param array $options - additional options to be used in field creation
      * @param mixed $defaultValue - the default value
+     * @param array $options - additional options to be used in field creation
      */
     public function __construct(string $key, string $label, $defaultValue = null, array $options = [])
     {
@@ -28,6 +28,13 @@ abstract class FieldBase
     }
 
     /**
+     * Creates the field in WordPress admin
+     *
+     * @return void
+     */
+    abstract public function createAdmin();
+
+    /**
      * Returns a piece of SQL to use in the WHERE clause: e.g. `"= '$this->key'"` OR `"LIKE '%$this->key%'"`
      */
     abstract public function getSelectionSQL() : string;
@@ -35,14 +42,8 @@ abstract class FieldBase
     /**
      * Returns the formatted value from meta results
      * 
-     * @param string $result - meta results for a given object
+     * @param string $result meta results for a given object
      */
     abstract public function getValue(array $meta);
     
-    /**
-     * Check passed options and call the appropriate functions to set them
-     *
-     * @return void
-     */
-    abstract public function setAdminOptions() : void;
 }
