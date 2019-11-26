@@ -40,66 +40,42 @@ class GroupField extends CFFieldBase
     /**
      * @inheritDoc
      */
-    public function getValue(array $meta)
+    public function getValue(array $results)
     {
         $value = [];
 
-        foreach($meta as $metaResult) {
-            $metaBelongsToThisGroup = strpos($metaResult->meta_key, $this->getPrefixedKey() . '|') !== false;
+        foreach($results as $meta) {
+            $metaBelongsToThisGroup = strpos($meta->meta_key, $this->getPrefixedKey() . '|') !== false;
 
-            if ($metaBelongsToThisGroup) {
-                /*
-                echo $metaResult->meta_key . ' = ' . $metaResult->meta_value;
-                echo '<br>';
-                */
-                
-                $metaKeyParts = explode('|', $metaResult->meta_key);
-                
-                $keys = explode(':', $metaKeyParts[1]);
-
-                $positions =  explode(':', $metaKeyParts[2]);
-
-                if (isset($keys)) {
-                    /*
-                    echo '<pre>';
-                    var_dump($keyArray);
-                    echo '</pre>';
-                    */
-
-                    $key = $metaKeyParts[1];
-                    $index = $metaKeyParts[2];
-                    
-                    $keys = explode(':', $key);
-                    $indices = explode(':', $index);
-
-                    /*
-                    echo '<pre>';
-                    var_dump($keys);
-                    echo '</pre>';'
-                    */
-
-                    if (count($indices) === 1) {
-                        $field = $this->getField($key);
-                        if (!empty($field) && !$field instanceof GroupField) {
-                            $value[$index][$key] = $metaResult->meta_value;
-                        }
-                    } else {
-                        $groupIndex = $indices[0];
-                        $valueIndex = $indices[1];
-                        $groupKey = $keys[0];
-                        $valueKey = $keys[1];
-                        
-                        $value[$groupIndex][$groupKey][$valueIndex][$valueKey] = $metaResult->meta_value;
-                    }
-
-                    // TODO: format values using field
-                    
-                    
-                }
+            if (!$metaBelongsToThisGroup) {
+                continue;
             }
+            
+            $this->addMetaToValue($value, $meta->meta_key, $meta->meta_value);
         }
 
         return empty($value) ? $this->defaultValue : $value;
+    }
+
+    private function addMetaToValue(array &$value, string $metaKey, $metaValue): void
+    {
+        $metaKeyParts = explode('|', $metaKey);
+        $keys = explode(':', $metaKeyParts[1]);
+        $positions = explode(':', $metaKeyParts[2]);
+
+        if (count($positions) === 1) {
+            $field = $this->getField($keys[0]);
+            if (!empty($field) && !$field instanceof GroupField) {
+                $value[$positions[0]][$keys[0]] = $metaValue;
+            }
+        } else {
+            $groupIndex = $positions[0];
+            $valueIndex = $positions[1];
+            $groupKey = $keys[0];
+            $valueKey = $keys[1];
+            
+            $value[$groupIndex][$groupKey][$valueIndex][$valueKey] = $metaValue;
+        }
     }
 
     /**
