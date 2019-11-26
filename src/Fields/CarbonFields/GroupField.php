@@ -6,27 +6,27 @@ use Carbon_Fields\Field;
 
 class GroupField extends CFFieldBase
 {
-    const DEFAULT_OPTIONS = [
-        'duplicate_groups_allowed' => false,
-        'layout' => 'grid',
-        'collapsed' => true,
-        'min' => -1,
-        'max' => -1,
-        'labels' => [
-            'singular_name' => 'entry',
-            'plural_name' => 'entries'
-        ]
-    ];
-
     private $fields = [];
 
     /**
      * @inheritDoc
      */
-    public function __construct(string $key, string $label, array $fields, $defaultValue = null, array $options = [])
+    public function __construct(string $key, string $label, $defaultValue = null, array $fields, array $options = [])
     {
-        $mergedOptions = array_merge(self::DEFAULT_OPTIONS, $options);
-        parent::__construct($key, $label, $defaultValue, $mergedOptions);
+        $fieldDefaults = [
+            'duplicate_groups_allowed' => false,
+            'layout' => 'grid',
+            'collapsed' => false,
+            'min' => -1,
+            'max' => -1,
+            'labels' => [
+                'singular_name' => 'Entry',
+                'plural_name' => 'Entries'
+            ]
+        ];
+        $combinedOptions = $this->combineOptions($fieldDefaults, $options);
+        
+        parent::__construct($key, $label, $defaultValue, $combinedOptions);
         $this->setFields($fields);
     }
 
@@ -43,24 +43,31 @@ class GroupField extends CFFieldBase
     public function getValue(array $meta)
     {
         $value = [];
-        foreach($meta as $metaResult) {
-            if (strpos($metaResult->meta_key, $this->getPrefixedKey()) !== false) {
 
+        foreach($meta as $metaResult) {
+            $metaBelongsToThisGroup = strpos($metaResult->meta_key, $this->getPrefixedKey() . '|') !== false;
+
+            if ($metaBelongsToThisGroup) {
                 /*
                 echo $metaResult->meta_key . ' = ' . $metaResult->meta_value;
                 echo '<br>';
                 */
                 
-                $keyArray = explode('|', $metaResult->meta_key);
-                if (isset($keyArray[1]) && $keyArray[1] !== '') {
+                $metaKeyParts = explode('|', $metaResult->meta_key);
+                
+                $keys = explode(':', $metaKeyParts[1]);
+
+                $positions =  explode(':', $metaKeyParts[2]);
+
+                if (isset($keys)) {
                     /*
                     echo '<pre>';
                     var_dump($keyArray);
                     echo '</pre>';
                     */
 
-                    $key = $keyArray[1];
-                    $index = $keyArray[2];
+                    $key = $metaKeyParts[1];
+                    $index = $metaKeyParts[2];
                     
                     $keys = explode(':', $key);
                     $indices = explode(':', $index);
@@ -98,21 +105,12 @@ class GroupField extends CFFieldBase
     /**
      * @inheritDoc
      */
-    public function createAdminField() : \Carbon_Fields\Field\Field
+    public function createAdmin()
     {
         $this->adminField =  Field::make('complex', $this->key, $this->label)
             ->add_fields($this->getAdminFields());
-        $this->setAdminOptions();
-
-        return $this->adminField;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function setAdminOptions() : void
-    {
-        $this->setDefaultAdminOptions();
+        
+        $this->setSharedOptions();
 
         foreach ($this->options as $option => $value) {
             switch ($option) {
@@ -170,7 +168,8 @@ class GroupField extends CFFieldBase
     public function getAdminFields() : array {
         $subFields = [];
         foreach ($this->fields as $field) {
-            $subFields[] = $field->createAdminField();
+            $field->createAdmin();
+            $subFields[] = $field->getAdminField();
         }
 
         return $subFields;
