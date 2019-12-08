@@ -9,7 +9,7 @@ class ImageField extends CFFieldBase
     public function __construct(
         string $key, 
         string $label, 
-        string $defaultValue = null,
+        $defaultValue = null,
         array $options = []
     ) {
         $fieldDefaults = [

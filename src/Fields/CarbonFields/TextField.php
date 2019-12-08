@@ -9,7 +9,7 @@ class TextField extends CFFieldBase
     public function __construct(
         string $key, 
         string $label, 
-        string $defaultValue = null,
+        $defaultValue = null,
         array $options = []
     ) {
         parent::__construct($key, $label, $defaultValue, $options);
