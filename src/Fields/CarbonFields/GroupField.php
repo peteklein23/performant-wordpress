@@ -61,6 +61,7 @@ class GroupField extends CFFieldBase
     {
         $metaKeyParts = explode('|', $metaKey);
         $keys = explode(':', $metaKeyParts[1]);
+        $keyCount = count($keys);
         $positions = explode(':', $metaKeyParts[2]);
 
         if (count($positions) === 1) {
@@ -69,12 +70,40 @@ class GroupField extends CFFieldBase
                 $value[$positions[0]][$keys[0]] = $metaValue;
             }
         } else {
-            $groupIndex = $positions[0];
-            $valueIndex = $positions[1];
-            $groupKey = $keys[0];
-            $valueKey = $keys[1];
+            // TODO: get this to create a nested structure based on keys
+            // Maybe try getting the nesting concept working in a test function outside the project?
+
+            // if the key doesn't exist, create the key
+            echo "<pre>$metaKey = $metaValue</pre>";
+            echo "<pre>" . print_r($keys, true) . "</pre>";
+
+            $prevValue = null;
+            foreach ($keys as $i => $key) {
+                $isLastKey = $keyCount === $i + 1;
+                if (!$isLastKey) {
+                    echo $key . ' needs to be created if it does not exist!!<br>';
+                    if(empty($value[$positions[$i]][$key])) {
+                        $value[$positions[$i]][$key] = [];
+                    }
+                }
+                else {
+                    echo 'set the value for ' . $key . '<br />';
+                    $value[$positions[$i]][$key] = $metaValue;
+                }
+                // echo "<pre>$key</pre>";
+                /*
+                if(empty($value[$i][$key])){
+                    $value[$i][$key] = [];
+                }
+                $groupIndex = $positions[0];
+                $groupKey = $keys[0];
+                $valueIndex = $positions[1];
+                $valueKey = $keys[1];
+                $value[$groupIndex][$groupKey][$valueIndex][$valueKey] = $metaValue;
+                */
+            }
             
-            $value[$groupIndex][$groupKey][$valueIndex][$valueKey] = $metaValue;
+            
         }
     }
 
