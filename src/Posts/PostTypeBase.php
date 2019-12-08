@@ -11,6 +11,8 @@ use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
 use PeteKlein\Performant\Taxonomies\TaxonomyBase;
 
+require_once (ABSPATH . '/wp-includes/class-wp-post.php');
+
 abstract class PostTypeBase extends Singleton
 {
     /**
@@ -66,6 +68,7 @@ abstract class PostTypeBase extends Singleton
             'labels' => self::getLabels($singularLabel, $pluralLabel),
             'menu_icon' => $icon
         ];
+
         if ($argType === self::PUBLIC_TYPE) {
             return array_merge($defaultArgs, [
                 'public' => true,
@@ -147,6 +150,64 @@ abstract class PostTypeBase extends Singleton
     }
 
     /**
+     * Fetch posts
+     *
+     * @param array $postIds
+     * @return array posts
+     */
+    private function fetchPosts(array $postIds) : array
+    {
+        global $wpdb;
+        
+        $postIdList = join(',', $postIds);
+        $postType = static::POST_TYPE;
+
+        $query = "SELECT
+            *
+        FROM $wpdb->posts
+        WHERE ID IN ($postIdList)
+        AND post_type = '$postType'";
+        
+        return $wpdb->get_results($query);
+    }
+
+    /**
+     * List Posts with Post Ids
+     *
+     * @param array $postIds
+     * @return array ID indexed posts
+     */
+    public function listPosts(array $postIds) : array
+    {
+        if(empty($postIds)) {
+            return [];
+        }
+
+        $results = $this->fetchPosts($postIds);
+
+        $formattedResults = [];
+        foreach ($results as $post) {
+            $id = $post->ID;
+            $formattedResults[$id] = new \WP_Post($post);
+        }
+
+        return $formattedResults;
+    }
+
+    /**
+     * Get a single post
+     *
+     * @param integer $postId
+     * @return void
+     */
+    public function getPost(int $postId)
+    {
+        $posts = $this->listPosts([$postId]);
+
+        return empty($posts[$postId]) ? null : $posts[$postId];
+    }
+
+    /**
      * Set field groups
      *
      * @param array $fieldGroups
@@ -187,6 +248,19 @@ abstract class PostTypeBase extends Singleton
         $this->meta->fetch($postIds);
 
         return $this->meta->list();
+    }
+
+    /**
+     * Get meta for a single post
+     *
+     * @param integer $postId
+     * @return void
+     */
+    public function getPostMeta(int $postId)
+    {
+        $meta = $this->listMeta([$postId]);
+
+        return empty($meta[$postId]) ? null : $meta[$postId];
     }
 
     /**
@@ -231,6 +305,19 @@ abstract class PostTypeBase extends Singleton
     }
 
     /**
+     * Get taxonomies for a single post
+     *
+     * @param integer $postId
+     * @return void
+     */
+    public function getPostTaxonomies(int $postId)
+    {
+        $taxonomies = $this->listTaxonomies([$postId]);
+
+        return empty($taxonomies[$postId]) ? null : $taxonomies[$postId];
+    }
+
+    /**
      * Register your featured image sizes here
      */
     protected function setFeaturedImageSizes(array $imageSizes) : void
@@ -253,10 +340,57 @@ abstract class PostTypeBase extends Singleton
         return $this;
     }
 
+    /**
+     * List images for multiple posts
+     *
+     * @param array $postIds
+     * @return void
+     */
     public function listFeatureImages(array $postIds = [])
     {
         $this->featuredImages->fetch($postIds);
 
         return $this->featuredImages->list();
+    }
+    
+    /**
+     * Get featured images for a single post
+     *
+     * @param integer $postId
+     * @return void
+     */
+    public function getPostFeaturedImage(int $postId)
+    {
+        $featuredImages = $this->listFeatureImages([$postId]);
+
+        return empty($featuredImages[$postId]) ? null : $featuredImages[$postId];
+    }
+
+    public function listPostData(array $postIds) : array
+    {
+        $posts = $this->listPosts($postIds);
+        $meta = $this->listMeta($postIds);
+        $taxonomies = $this->listTaxonomies($postIds);
+        $featuredImages = $this->listFeatureImages($postIds);
+
+        $postData = [];
+
+        foreach($postIds as $postId) {
+            $postData[$postId] = [
+                'post' => $posts[$postId],
+                'meta' => $meta[$postId],
+                'taxonomies' => $taxonomies[$postId],
+                'featured_images' => $featuredImages[$postId]
+            ];
+        }
+
+        return $postData;
+    }
+
+    public function getPostData(int $postId)
+    {
+        $postData = $this->listPostData([$postId]);
+
+        return empty($postData[$postId]) ? null : $postData[$postId];
     }
 }
