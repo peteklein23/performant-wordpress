@@ -1,0 +1,13 @@
+language: php
+dist: bionic
+
+php:
+  - 7.2
+  - 7.3
+
+install:
+  - composer self-update
+  - composer install
+
+script:
+  - php vendor/bin/codecept run unit

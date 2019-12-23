@@ -2,9 +2,7 @@
 
 namespace PeteKlein\Performant;
 
-use PeteKlein\Performant\Posts\PostTypeBase;
-
-class PerformantTheme
+abstract class PerformantTheme
 {
     public function __construct()
     {
@@ -46,22 +44,6 @@ class PerformantTheme
      */
     public function registerPostTypes()
     {
-    }
-
-    /**
-     * Get Post Type 
-     * 
-     * @return void
-     */
-    public function getPostType(string $slug) : ?PostTypeBase
-    {
-        foreach ($this->postTypes as $postType) {
-            if ($postType::POST_TYPE === $slug) {
-                return $postType;
-            }
-        }
-
-        return null;
     }
 
     /**

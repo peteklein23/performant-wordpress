@@ -18,5 +18,8 @@
     "psr-4": {
       "PeteKlein\\Performant\\": "src/"
     }
+  },
+  "require-dev": {
+    "lucatume/wp-browser": "^2.2"
   }
 }
