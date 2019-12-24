@@ -7,7 +7,7 @@ use PeteKlein\Performant\Patterns\Singleton;
 abstract class UserRoleBase extends Singleton
 {
     /**
-     * post type slug to be overridden in inheriting class
+     * role slug to be overridden in inheriting class
      */
     const ROLE = '';
 
@@ -53,5 +53,26 @@ abstract class UserRoleBase extends Singleton
         if (is_wp_error($registeredPostType)) {
             throw new \Exception('There was an issue registering the post type.');
         }
+    }
+
+    public function listUsers(array $userIds = []): array
+    {
+        global $wpdb;
+
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $idList = join(',', $userIds);
+        $likeComparison = "'%\"" . static::ROLE . "\"%'";
+        $query = "SELECT
+            *
+        FROM $wpdb->users u
+        INNER JOIN $wpdb->usermeta um ON um.user_id = u.ID 
+            AND um.meta_key = 'wp_capabilities' 
+            AND um.meta_value LIKE $likeComparison
+        WHERE u.ID IN($idList)";
+
+        return $wpdb->get_results($query);
     }
 }
