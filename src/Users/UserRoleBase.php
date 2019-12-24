@@ -66,7 +66,14 @@ abstract class UserRoleBase extends Singleton
         $idList = join(',', $userIds);
         $likeComparison = "'%\"" . static::ROLE . "\"%'";
         $query = "SELECT
-            *
+            u.id,
+            u.user_login,
+            u.user_nicename,
+            u.user_email,
+            u.user_url,
+            u.user_registered,
+            u.user_status,
+            u.display_name
         FROM $wpdb->users u
         INNER JOIN $wpdb->usermeta um ON um.user_id = u.ID 
             AND um.meta_key = 'wp_capabilities' 
