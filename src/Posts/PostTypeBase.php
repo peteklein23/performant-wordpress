@@ -266,19 +266,6 @@ abstract class PostTypeBase extends Singleton
     }
 
     /**
-     * Get meta for a single post
-     *
-     * @param integer $postId
-     * @return void
-     */
-    public function getPostMeta(int $postId)
-    {
-        $meta = $this->listMeta([$postId]);
-
-        return empty($meta[$postId]) ? null : $meta[$postId];
-    }
-
-    /**
      * Add Taxonomies
      *
      * @param array $taxonomies - array of taxonomies
@@ -320,19 +307,6 @@ abstract class PostTypeBase extends Singleton
     }
 
     /**
-     * Get taxonomies for a single post
-     *
-     * @param integer $postId
-     * @return void
-     */
-    public function getPostTaxonomies(int $postId)
-    {
-        $taxonomies = $this->listTaxonomies([$postId]);
-
-        return empty($taxonomies[$postId]) ? null : $taxonomies[$postId];
-    }
-
-    /**
      * Register your featured image sizes here
      */
     protected function setFeaturedImageSizes(array $imageSizes): void
@@ -367,19 +341,6 @@ abstract class PostTypeBase extends Singleton
 
         return $this->featuredImages->list();
     }
-    
-    /**
-     * Get featured images for a single post
-     *
-     * @param integer $postId
-     * @return void
-     */
-    public function getPostFeaturedImage(int $postId)
-    {
-        $featuredImages = $this->listFeatureImages([$postId]);
-
-        return empty($featuredImages[$postId]) ? null : $featuredImages[$postId];
-    }
 
     public function listPostData(array $postIds) : array
     {
@@ -400,12 +361,5 @@ abstract class PostTypeBase extends Singleton
         }
 
         return $postData;
-    }
-
-    public function getPostData(int $postId)
-    {
-        $postData = $this->listPostData([$postId]);
-
-        return empty($postData[$postId]) ? null : $postData[$postId];
     }
 }
