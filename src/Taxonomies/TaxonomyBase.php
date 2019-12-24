@@ -13,6 +13,8 @@ abstract class TaxonomyBase extends Singleton
     const TAG_TYPE = 'tag';
     const CATEGORY_TYPE = 'category';
 
+    protected static $instances = [];
+
     abstract public function register() : void;
 
     protected function __construct()
@@ -22,6 +24,21 @@ abstract class TaxonomyBase extends Singleton
                 _x('You must set the constant TAXONOMY to inherit from TaxonomyBase', 'no taxonomy constant', 'performant')
             );
         }
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @return TaxonomyBase
+     */
+    public static function getInstance(): TaxonomyBase
+    {
+        $cls = static::class;
+        if (!isset(self::$instances[$cls])) {
+            self::$instances[$cls] = new static;
+        }
+
+        return self::$instances[$cls];
     }
 
     /**

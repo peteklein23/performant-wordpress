@@ -6,9 +6,11 @@ use PeteKlein\Performant\Patterns\Singleton;
 
 abstract class ImageSizeBase extends Singleton
 {
+    const SIZE = '';
     const ALLOWED_X_CROPS = ['left', 'center', 'right'];
     const ALLOWED_Y_CROPS = ['top', 'center', 'bottom'];
 
+    protected static $instances = [];
     protected $width;
     protected $height;
     protected $crop;
@@ -27,6 +29,21 @@ abstract class ImageSizeBase extends Singleton
         if ($crop) {
             $this->setCropXAndY($cropX, $cropY);
         }
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @return ImageSizeBase
+     */
+    public static function getInstance(): ImageSizeBase
+    {
+        $cls = static::class;
+        if (!isset(self::$instances[$cls])) {
+            self::$instances[$cls] = new static;
+        }
+
+        return self::$instances[$cls];
     }
 
     private function setCropXAndY(string $cropX = null, string $cropY = null) : void

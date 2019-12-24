@@ -2,7 +2,6 @@
 
 namespace PeteKlein\Performant\Posts;
 
-use PeteKlein\Performant\Fields\FieldBase;
 use PeteKlein\Performant\Fields\FieldGroupBase;
 use PeteKlein\Performant\Images\ImageSizeBase;
 use PeteKlein\Performant\Patterns\Singleton;
@@ -24,6 +23,7 @@ abstract class PostTypeBase extends Singleton
 
     protected $meta;
     protected $taxonomies;
+    protected static $instances = [];
 
     /**
      * Registers the post type by calling PostType->register()
@@ -46,6 +46,21 @@ abstract class PostTypeBase extends Singleton
         $this->featuredImages = new FeaturedImageCollection();
 
         $this->registerPostType();
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @return PostTypeBase
+     */
+    public static function getInstance(): PostTypeBase
+    {
+        $cls = static::class;
+        if (!isset(self::$instances[$cls])) {
+            self::$instances[$cls] = new static;
+        }
+
+        return self::$instances[$cls];
     }
 
     /**
@@ -155,7 +170,7 @@ abstract class PostTypeBase extends Singleton
      * @param array $postIds
      * @return array posts
      */
-    private function fetchPosts(array $postIds) : array
+    private function fetchPosts(array $postIds): array
     {
         global $wpdb;
         
@@ -177,7 +192,7 @@ abstract class PostTypeBase extends Singleton
      * @param array $postIds
      * @return array ID indexed posts
      */
-    public function listPosts(array $postIds) : array
+    public function listPosts(array $postIds): array
     {
         if(empty($postIds)) {
             return [];
@@ -213,7 +228,7 @@ abstract class PostTypeBase extends Singleton
      * @param array $fieldGroups
      * @return void
      */
-    protected function setFieldGroups(array $fieldGroups) : void
+    protected function setFieldGroups(array $fieldGroups): void
     {
         if (empty($fieldGroups)) {
             return;
@@ -230,7 +245,7 @@ abstract class PostTypeBase extends Singleton
      * @param FieldGroupBase $fieldGroup
      * @return void
      */
-    protected function addMeta(FieldGroupBase $fieldGroup) : void
+    protected function addMeta(FieldGroupBase $fieldGroup): void
     {
         foreach ($fieldGroup->listFields() as $field) {
             $this->meta->addField($field);
@@ -269,7 +284,7 @@ abstract class PostTypeBase extends Singleton
      * @param array $taxonomies - array of taxonomies
      * @return void
      */
-    protected function setTaxonomies(array $taxonomies) : void
+    protected function setTaxonomies(array $taxonomies): void
     {
         if (empty($taxonomies)) {
             return;
@@ -284,7 +299,7 @@ abstract class PostTypeBase extends Singleton
      *
      * @param TaxonomyBase $taxonomy
      */
-    private function addTaxonomy(TaxonomyBase $taxonomy = null) : PostTypeBase
+    private function addTaxonomy(TaxonomyBase $taxonomy = null): PostTypeBase
     {
         $this->taxonomies->addTaxonomy($taxonomy);
 
@@ -320,7 +335,7 @@ abstract class PostTypeBase extends Singleton
     /**
      * Register your featured image sizes here
      */
-    protected function setFeaturedImageSizes(array $imageSizes) : void
+    protected function setFeaturedImageSizes(array $imageSizes): void
     {
         foreach ($imageSizes as $imageSize) {
             $this->addFeaturedImageSize($imageSize);
@@ -333,7 +348,7 @@ abstract class PostTypeBase extends Singleton
      * @param ImageSizeBase $imageSize
      * @return PostTypeBase
      */
-    protected function addFeaturedImageSize(ImageSizeBase $imageSize) : PostTypeBase
+    protected function addFeaturedImageSize(ImageSizeBase $imageSize): PostTypeBase
     {
         $this->featuredImages->addSize($imageSize::SIZE);
 
