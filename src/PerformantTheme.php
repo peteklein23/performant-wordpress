@@ -24,6 +24,7 @@ abstract class PerformantTheme
     public function initTheme()
     {
         $this->addThemeSupport();
+        $this->registerUserRoles();
         $this->registerImageSizes();
         $this->registerTaxonomies();
         $this->registerPostTypes();
@@ -58,7 +59,15 @@ abstract class PerformantTheme
      *
      * @return void
      */
-    protected function registerImageSizes() : void 
+    protected function registerImageSizes(): void 
+    {}
+
+    /**
+     * Register user roles here
+     *
+     * @return void
+     */
+    public function registerUserRoles(): void
     {}
 
     /**
