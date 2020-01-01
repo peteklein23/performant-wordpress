@@ -51,7 +51,9 @@ class GroupField extends CFFieldBase
                 continue;
             }
             
-            $this->addMetaToValue($value, $meta->meta_key, $meta->meta_value);
+            // $this->addMetaToValue($value, $meta->meta_key, $meta->meta_value);
+
+            return carbon_get_post_meta( $meta->post_id, $this->key );
         }
 
         return empty($value) ? $this->defaultValue : $value;

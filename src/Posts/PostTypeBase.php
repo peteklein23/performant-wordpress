@@ -342,8 +342,12 @@ abstract class PostTypeBase extends Singleton
         return $this->featuredImages->list();
     }
 
-    public function listPostData(array $postIds) : array
+    public function listPostData(array $postIds): array
     {
+        if(empty($postIds)) {
+            return [];
+        }
+
         $posts = $this->listPosts($postIds);
         $meta = $this->listMeta($postIds);
         $taxonomies = $this->listTaxonomies($postIds);
@@ -353,10 +357,10 @@ abstract class PostTypeBase extends Singleton
 
         foreach($postIds as $postId) {
             $postData[$postId] = [
-                'post' => $posts[$postId],
-                'meta' => $meta[$postId],
-                'taxonomies' => $taxonomies[$postId],
-                'featured_images' => $featuredImages[$postId]
+                'post' => empty($posts[$postId]) ? [] : $posts[$postId],
+                'meta' => empty($meta[$postId]) ? [] : $meta[$postId],
+                'taxonomies' => empty($taxonomies[$postId]) ? [] : $taxonomies[$postId],
+                'featured_images' => empty($featuredImages[$postId]) ? [] : $featuredImages[$postId]
             ];
         }
 

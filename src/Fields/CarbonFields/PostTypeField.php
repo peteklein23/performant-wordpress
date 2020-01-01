@@ -11,7 +11,7 @@ class PostTypeField extends CFFieldBase
     public function __construct(
         string $key, 
         string $label, 
-        $defaultValue = null,
+        $defaultValue = [],
         string $postTypeSlug,
         array $options = []
     ) {
