@@ -1,17 +1,15 @@
 <?php
 
-namespace PeteKlein\Performant\Posts\Meta;
+namespace PeteKlein\Performant\Meta;
 
-use PeteKlein\Performant\Fields\FieldBase;
-
-class PostMeta
+class Meta
 {
-    public $postId;
+    public $id;
     private $values = [];
 
-    public function __construct(int $postId)
+    public function __construct(int $id)
     {
-        $this->postId = $postId;
+        $this->id = $id;
     }
 
     public function add($key, $value)
