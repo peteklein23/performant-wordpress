@@ -4,22 +4,30 @@ use Carbon_Fields\Field\Field;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Fields\FieldBase;
 
-class PostMetaCollectionTest extends \Codeception\Test\Unit
+class PostMetaCollectionTest extends \Codeception\TestCase\WPTestCase
 {
     /**
-     * @var \UnitTester
+     * @var \WpunitTester
      */
     protected $tester;
     
-    protected function _before()
+    public function setUp(): void
     {
+        // Before...
+        parent::setUp();
+
+        // Your set up methods here.
     }
 
-    protected function _after()
+    public function tearDown(): void
     {
+        // Your tear down methods here.
+
+        // Then...
+        parent::tearDown();
     }
 
-    // tests
+    // Tests
     public function testListInitializesEmpty()
     {
         $collection = new PostMetaCollection();
