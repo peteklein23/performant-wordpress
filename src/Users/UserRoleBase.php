@@ -2,7 +2,9 @@
 
 namespace PeteKlein\Performant\Users;
 
+use PeteKlein\Performant\Fields\FieldGroupBase;
 use PeteKlein\Performant\Patterns\Singleton;
+use PeteKlein\Performant\Users\Meta\UserMetaCollection;
 
 abstract class UserRoleBase extends Singleton
 {
@@ -14,6 +16,12 @@ abstract class UserRoleBase extends Singleton
     protected static $instances = [];
     private $label = '';
     private $capabilities = [];
+    protected $meta;
+
+    /**
+     * Creates the container for fields in the admin
+     */
+    abstract public function createAdminContainer(FieldGroupBase $fieldGroup);
 
     public function __construct(string $label, array $capabilities = [])
     {
@@ -23,6 +31,8 @@ abstract class UserRoleBase extends Singleton
 
         $this->label = $label;
         $this->capabilities = $capabilities;
+
+        $this->meta = new UserMetaCollection();
     }
 
     /**
@@ -55,6 +65,12 @@ abstract class UserRoleBase extends Singleton
         }
     }
 
+    /**
+     * List users by user ids
+     *
+     * @param array $userIds
+     * @return array
+     */
     public function listUsers(array $userIds = []): array
     {
         global $wpdb;
@@ -81,5 +97,48 @@ abstract class UserRoleBase extends Singleton
         WHERE u.ID IN($idList)";
 
         return $wpdb->get_results($query);
+    }
+
+    /**
+     * Set field groups
+     *
+     * @param array $fieldGroups
+     * @return void
+     */
+    protected function setFieldGroups(array $fieldGroups): void
+    {
+        if (empty($fieldGroups)) {
+            return;
+        }
+        foreach ($fieldGroups as $fieldGroup) {
+            $this->createAdminContainer($fieldGroup);
+            $this->addMeta($fieldGroup);
+        }
+    }
+
+    /**
+     * Adds a field to the meta collection
+     *
+     * @param FieldGroupBase $fieldGroup
+     * @return void
+     */
+    protected function addMeta(FieldGroupBase $fieldGroup): void
+    {
+        foreach ($fieldGroup->listFields() as $field) {
+            $this->meta->addField($field);
+        }
+    }
+
+    /**
+     * List meta fields for multiple posts
+     *
+     * @param array $postIds
+     * @return void
+     */
+    public function listMeta(array $postIds = [])
+    {
+        $this->meta->fetch($postIds);
+
+        return $this->meta->list();
     }
 }

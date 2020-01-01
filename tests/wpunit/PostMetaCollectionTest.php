@@ -1,6 +1,5 @@
 <?php
 
-use Carbon_Fields\Field\Field;
 use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Fields\FieldBase;
 
