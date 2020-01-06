@@ -25,7 +25,7 @@ composer install
 
 ```
 
-Create a Field Group:
+Create a Field Group (these will also create fields in the admin using Carbon Fields):
 
 ```php
 <?php
