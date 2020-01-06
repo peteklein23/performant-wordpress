@@ -248,7 +248,7 @@ class CreatorRole extends UserRoleBase
 
 ```
 
-Tie it all together in your Theme:
+Tie it all together in a Theme file:
 
 ```php
 <?php
@@ -261,7 +261,7 @@ use MyProjectNamespace\PostTypes\ProjectType;
 use MyProjectNamespace\Taxonomies\Skill;
 use MyProjectNamespace\ImageSizes\Large;
 
-class PeteKleinWebsite extends PerformantTheme
+class MyProject extends PerformantTheme
 {
     public function __construct()
     {
@@ -299,5 +299,49 @@ class PeteKleinWebsite extends PerformantTheme
         wp_enqueue_style('my-website-style', get_stylesheet_uri());
     }
 }
+
+```
+
+Include your theme file in `functions.php`:
+
+```php
+<?php
+
+use MyProjectNamespace\MyProject;
+
+require_once ABSPATH . '/vendor/autoload.php';
+
+new MyProject();
+
+```
+
+Use it in a page or API endpoint (this example is in the template file `single-project.php`):
+
+```php
+<?php
+global $post;
+
+use MyProjectNamespace\PostTypes\ProjectType;
+use PeteKlein\Performant\Posts\Post;
+
+$projectType = ProjectType::getInstance();
+$project = new Post($post->ID, $projectType);
+
+get_header();
+
+$projectData = $project->get();
+$meta = $projectData['meta'];
+$relatedProjectIds = $meta['related_projects'];
+$relatedProjects = $projectType->listPostData($relatedProjectIds);
+?>
+<h3>This Project</h3>
+<pre>
+<?php var_dump($projectData); ?>
+</pre>
+
+<h3>Related Projects</h3>
+<pre>
+<?php var_dump($relatedProjects); ?>
+</pre>
 
 ```
