@@ -4,8 +4,16 @@ namespace PeteKlein\Performant;
 
 abstract class PerformantTheme
 {
+    /**
+     * this should match the theme folder name
+     */
+    const THEME_SLUG = '';
+
     public function __construct()
     {
+        if (empty(static::THEME_SLUG)) {
+            throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
+        }
         $this->registerDefaultHooks();
     }
 
