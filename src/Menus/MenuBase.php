@@ -91,17 +91,47 @@ abstract class MenuBase extends Singleton
         return (int) $navMenuLocations[static::LOCATION];
     }
 
+    private function insertNestedResult(array &$formattedResults, int $parentId, int $resultId, array $result)
+    {
+        if(empty($formattedResults)) {
+            return;
+        }
+
+        foreach($formattedResults as $id => &$value) {
+            if ($id === $parentId) {
+                $value['children'][$resultId] = $result;
+                return;
+            }
+
+            $this->insertNestedResult($value['children'], $parentId, $resultId, $result);
+        }
+    }
+
+    private function insertMenuItem(array &$formattedResults, $result) {
+        $formattedResult = [
+            'ID' => (int) $result->ID,
+            'parent_id' => (int) $result->parent_id,
+            'post_title' => $result->post_title,
+            'url' => !empty($result->url) ? $result->url : get_permalink($result->object_id),
+            'children' => []
+        ];
+    
+        if ( empty($result->parent_id) ) {
+            $formattedResults[ $result->ID ] = $formattedResult;
+            return;
+        }
+
+        $this->insertNestedResult($formattedResults, $result->parent_id, $result->ID, $formattedResult);
+    }
+
     private function formatResults(array $results) {
         $formattedResults = [];
         if(empty($results)){
             return $formattedResults;
         }
         
-        foreach($results as $result) {
-            $formattedResults[] = [
-                'post_title' => $result->post_title,
-                'url' => !empty($result->url) ? $result->url : get_permalink($results->object_id)
-            ];
+        foreach( $results AS $result ) {
+            $this->insertMenuItem($formattedResults, $result);
         }
 
         return $formattedResults;
@@ -117,7 +147,7 @@ abstract class MenuBase extends Singleton
             p.post_title,
             objectIdMeta.meta_value AS object_id,
             urlMeta.meta_value AS url,
-            parentMeta.meta_value AS parent
+            parentMeta.meta_value AS parent_id
         FROM $wpdb->term_relationships tr
         INNER JOIN $wpdb->posts p ON tr.object_id = p.ID AND p.post_status = 'publish'
         INNER JOIN $wpdb->term_taxonomy tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
