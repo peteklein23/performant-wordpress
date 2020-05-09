@@ -10,22 +10,27 @@ abstract class MenuBase extends Singleton
      * menu location to be overridden in inheriting class
      */
     const LOCATION = '';
+    /**
+     * theme slug to be overridden in the inheriting class
+     */
+    const THEME_SLUG = '';
 
     protected static $instances = [];
-    private $themeSlug;
 
     /**
      * Registers the post type by calling Menu->register()
      */
     abstract public function register();
 
-    public function __construct($themeSlug)
+    public function __construct()
     {
         if (empty(static::LOCATION)) {
             throw new \Exception(__('You must set the constant LOCATION in your inheriting class', 'performant'));
         }
 
-        $this->themeSlug = $themeSlug;
+        if (empty(static::THEME_SLUG)) {
+            throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
+        }
     }
 
     /**
@@ -33,7 +38,7 @@ abstract class MenuBase extends Singleton
      *
      * @return MenuBase
      */
-    public static function getInstance(): MenuBase
+    public static function getInstance() : MenuBase
     {
         $cls = static::class;
         if (!isset(self::$instances[$cls])) {
@@ -50,7 +55,7 @@ abstract class MenuBase extends Singleton
      * @param array $args
      * @return void
      */
-    protected function registerMenu($description)
+    protected function registerMenu($description) : void
     {
         $registeredMenu = register_nav_menu(static::LOCATION, $description);
 
@@ -60,9 +65,9 @@ abstract class MenuBase extends Singleton
     }
 
     /**
-     * Get the menu id from it's registered location
+     * Gets the id of the menu instance
      *
-     * @return void
+     * @return integer
      */
     public function getMenuId() : int
     {
@@ -71,11 +76,11 @@ abstract class MenuBase extends Singleton
         $query = "SELECT
             option_value
         FROM $wpdb->options 
-        WHERE option_name = 'theme_mods_$this->themeSlug'";
+        WHERE option_name = 'theme_mods_" . static::THEME_SLUG . "'";
         
         $themeOptionsResult = $wpdb->get_var($query);
         if ($themeOptionsResult === false) {
-            throw new \Exception('This there are no theme options registered for theme with "' . $this->themeSlug . '". Please make sure the theme is activated and the theme slug matches your directory.');
+            throw new \Exception('This there are no theme options registered for theme with "' . static::THEME_SLUG . '". Please make sure the theme is activated and the theme slug matches your directory.');
         }
         $themeOptions = maybe_unserialize($themeOptionsResult);
 
@@ -90,8 +95,17 @@ abstract class MenuBase extends Singleton
 
         return (int) $navMenuLocations[static::LOCATION];
     }
-
-    private function insertNestedResult(array &$formattedResults, int $parentId, int $resultId, array $result)
+    
+    /**
+     * nests the result under it's parent in the formattedResults
+     *
+     * @param array $formattedResults
+     * @param integer $parentId
+     * @param integer $resultId
+     * @param array $result
+     * @return void
+     */
+    private function insertNestedResult(array &$formattedResults, int $parentId, int $resultId, array $result) : void
     {
         if(empty($formattedResults)) {
             return;
@@ -107,7 +121,15 @@ abstract class MenuBase extends Singleton
         }
     }
 
-    private function insertMenuItem(array &$formattedResults, $result) {
+    /**
+     * Adds a menu item to the formatted result
+     *
+     * @param array $formattedResults
+     * @param [type] $result
+     * @return void
+     */
+    private function insertMenuItem(array &$formattedResults, $result) : void
+    {
         $formattedResult = [
             'ID' => (int) $result->ID,
             'parent_id' => (int) $result->parent_id,
@@ -123,8 +145,15 @@ abstract class MenuBase extends Singleton
 
         $this->insertNestedResult($formattedResults, $result->parent_id, $result->ID, $formattedResult);
     }
-
-    private function formatResults(array $results) {
+    
+    /**
+     * Formats and nests the menu data from database results
+     *
+     * @param array $results
+     * @return array
+     */
+    private function formatResults(array $results) : array
+    {
         $formattedResults = [];
         if(empty($results)){
             return $formattedResults;
@@ -137,7 +166,13 @@ abstract class MenuBase extends Singleton
         return $formattedResults;
     }
 
-    public function getMenuItems() {
+    /**
+     * Returns the menu data
+     *
+     * @return array
+     */
+    public function getMenuData() : array
+    {
         global $wpdb;
 
         $menuId = $this->getMenuId();
@@ -161,5 +196,58 @@ abstract class MenuBase extends Singleton
         $menuItems = $wpdb->get_results($query);
 
         return $this->formatResults($menuItems);
+    }
+
+    /**
+     * Get the menu markup as nested lists
+     *
+     * @param array $menuItem
+     * @param string $subMenuClass
+     * @return string
+     */
+    protected function getItemHtml(array $menuItem, string $subMenuClass) : string
+    {
+        $id = $menuItem['ID'];
+        $title = $menuItem['post_title'];
+        $url = $menuItem['url'];
+        
+        $children = $menuItem['children'];
+        $childrenHtml = '';
+
+        if (!empty($children)) {
+            $childrenHtml .= "<ul class=\"$subMenuClass\">";
+            foreach($children as $childMenuItem) {
+                $childrenHtml .= $this->getItemHtml($childMenuItem, $subMenuClass);
+            }
+            $childrenHtml .= "</ul>";
+        }
+
+        $linkHtml = "<li class=\"menu-item-$id\"><a href=\"$url\">$title</a>$childrenHtml</li>";
+
+        return $linkHtml;
+    }
+
+    /**
+     * Get the menu markup as nested lists
+     *
+     * @param string $menuClass
+     * @param string $subMenuClass
+     * @return string
+     */
+    public function getHtml(string $menuClass, string $subMenuClass = 'sub-menu') : string
+    {
+        $menuData = $this->getMenuData();
+
+        if (empty($menuData)) {
+            return null;
+        }
+
+        $menuMarkup = '<ul class="' . $menuClass . '">';
+        foreach ($menuData as $menuItem) {
+            $menuMarkup .= $this->getItemHtml($menuItem, $subMenuClass);
+        }
+        $menuMarkup .= '</ul>';
+
+        return $menuMarkup;
     }
 }
