@@ -14,7 +14,26 @@ abstract class PerformantTheme
         if (empty(static::THEME_SLUG)) {
             throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
         }
+        
         $this->registerDefaultHooks();
+    }
+
+    public static function getThemeMods() {
+        global $wpdb;
+
+        $query = "SELECT
+            option_value
+        FROM $wpdb->options 
+        WHERE option_name = 'theme_mods_" . static::THEME_SLUG . "'";
+        
+        $themeModsResult = $wpdb->get_var($query);
+        if ($themeModsResult === false) {
+            trigger_error('This there are no theme mods registered for theme with "' . static::THEME_SLUG . '". Please make sure the theme is activated and the theme slug matches your theme directory.');
+
+            return null;
+        }
+        
+        return maybe_unserialize($themeModsResult);
     }
 
     public function registerDefaultHooks()
