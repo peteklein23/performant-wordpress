@@ -2,23 +2,45 @@
 
 namespace PeteKlein\Performant;
 
-abstract class PerformantTheme
+use PeteKlein\Performant\Patterns\Singleton;
+
+abstract class PerformantTheme extends Singleton
 {
     /**
      * this should match the theme folder name
      */
     const THEME_SLUG = '';
 
+    protected static $instances = [];
     protected $themeMods = null;
+
+    protected abstract function register();
 
     public function __construct()
     {
         if (empty(static::THEME_SLUG)) {
             throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
         }
+    }
 
+    /**
+     * @inheritDoc
+     *
+     * @return PerformantTheme
+     */
+    public static function getInstance() : PerformantTheme
+    {
+        $cls = static::class;
+        if (!isset(self::$instances[$cls])) {
+            self::$instances[$cls] = new static;
+        }
+
+        return self::$instances[$cls];
+    }
+
+    public function registerTheme() : void
+    {
         $this->registerDefaultHooks();
-
         $this->themeMods = self::getThemeMods();
     }
 
@@ -60,7 +82,7 @@ abstract class PerformantTheme
         $this->registerTaxonomies();
         $this->registerPostTypes();
         $this->registerShortcodes();
-        $this->registerNavMenus();
+        $this->registerMenus();
     }
     
     public function addThemeSupport()
@@ -111,7 +133,7 @@ abstract class PerformantTheme
     /**
      * Register your nav menus here
      */
-    public function registerNavMenus()
+    public function registerMenus()
     {
     }
 
@@ -146,5 +168,11 @@ abstract class PerformantTheme
 
     public function registerAdminStyles()
     {
+    }
+
+    public function getTemplatePart(string $filePath)
+    {
+        $fullPath = WP_CONTENT_DIR . '/themes/' . static::THEME_SLUG . '/' . $filePath;
+        include($fullPath);
     }
 }
