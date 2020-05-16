@@ -9,13 +9,17 @@ abstract class PerformantTheme
      */
     const THEME_SLUG = '';
 
+    protected $themeMods = null;
+
     public function __construct()
     {
         if (empty(static::THEME_SLUG)) {
             throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
         }
-        
+
         $this->registerDefaultHooks();
+
+        $this->themeMods = self::getThemeMods();
     }
 
     public static function getThemeMods() {
