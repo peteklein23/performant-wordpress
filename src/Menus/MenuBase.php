@@ -121,10 +121,11 @@ abstract class MenuBase extends Singleton
      */
     private function insertMenuItem(array &$formattedResults, $result) : void
     {
+        // TODO: query for post title and URL in mass to save on queries
         $formattedResult = [
             'ID' => (int) $result->ID,
             'parent_id' => (int) $result->parent_id,
-            'post_title' => $result->post_title,
+            'post_title' => !empty($result->post_title) ? $result->post_title : get_the_title($result->object_id),
             'url' => !empty($result->url) ? $result->url : get_permalink($result->object_id),
             'children' => []
         ];
@@ -146,6 +147,7 @@ abstract class MenuBase extends Singleton
     private function formatResults(array $results) : array
     {
         $formattedResults = [];
+        
         if(empty($results)){
             return $formattedResults;
         }
