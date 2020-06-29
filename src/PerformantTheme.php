@@ -14,12 +14,17 @@ abstract class PerformantTheme extends Singleton
     protected static $instances = [];
     protected $themeMods = null;
 
-    protected abstract function register();
+    abstract protected function register();
 
     public function __construct()
     {
         if (empty(static::THEME_SLUG)) {
-            throw new \Exception(__('You must set the constant THEME_SLUG in your inheriting class', 'performant'));
+            throw new \Exception(
+                __(
+                    'You must set the constant THEME_SLUG in your inheriting class',
+                    'performant'
+                )
+            );
         }
     }
 
@@ -28,37 +33,45 @@ abstract class PerformantTheme extends Singleton
      *
      * @return PerformantTheme
      */
-    public static function getInstance() : PerformantTheme
+    public static function getInstance(): PerformantTheme
     {
         $cls = static::class;
         if (!isset(self::$instances[$cls])) {
-            self::$instances[$cls] = new static;
+            self::$instances[$cls] = new static();
         }
 
         return self::$instances[$cls];
     }
 
-    public function registerTheme() : void
+    public function registerTheme(): void
     {
         $this->registerDefaultHooks();
         $this->themeMods = self::getThemeMods();
     }
 
-    public static function getThemeMods() {
+    public static function getThemeMods()
+    {
         global $wpdb;
 
-        $query = "SELECT
+        $query =
+            "SELECT
             option_value
         FROM $wpdb->options 
-        WHERE option_name = 'theme_mods_" . static::THEME_SLUG . "'";
-        
+        WHERE option_name = 'theme_mods_" .
+            static::THEME_SLUG .
+            "'";
+
         $themeModsResult = $wpdb->get_var($query);
         if ($themeModsResult === false) {
-            trigger_error('This there are no theme mods registered for theme with "' . static::THEME_SLUG . '". Please make sure the theme is activated and the theme slug matches your theme directory.');
+            trigger_error(
+                'This there are no theme mods registered for theme with "' .
+                    static::THEME_SLUG .
+                    '". Please make sure the theme is activated and the theme slug matches your theme directory.'
+            );
 
             return null;
         }
-        
+
         return maybe_unserialize($themeModsResult);
     }
 
@@ -67,6 +80,7 @@ abstract class PerformantTheme extends Singleton
         add_action('after_setup_theme', [$this, 'initTheme']);
         add_action('wp_enqueue_scripts', [$this, 'registerScripts']);
         add_action('wp_enqueue_scripts', [$this, 'registerStyles']);
+        add_action('wp_enqueue_scripts', [$this, 'registerComponents']);
         add_action('widgets_init', [$this, 'registerSidebars']);
         add_action('widgets_init', [$this, 'registerWidgets']);
         add_action('admin_menu', [$this, 'registerAdminScreens']);
@@ -84,7 +98,7 @@ abstract class PerformantTheme extends Singleton
         $this->registerShortcodes();
         $this->registerMenus();
     }
-    
+
     public function addThemeSupport()
     {
         add_theme_support('title-tag');
@@ -101,6 +115,13 @@ abstract class PerformantTheme extends Singleton
     }
 
     /**
+     * Register your components here
+     */
+    public function registerComponents()
+    {
+    }
+
+    /**
      * Register your taxonomies with `$this->setTaxonomies`
      */
     protected function registerTaxonomies()
@@ -112,8 +133,9 @@ abstract class PerformantTheme extends Singleton
      *
      * @return void
      */
-    protected function registerImageSizes(): void 
-    {}
+    protected function registerImageSizes(): void
+    {
+    }
 
     /**
      * Register user roles here
@@ -121,7 +143,8 @@ abstract class PerformantTheme extends Singleton
      * @return void
      */
     public function registerUserRoles(): void
-    {}
+    {
+    }
 
     /**
      * Register your shortcodes here
@@ -153,7 +176,7 @@ abstract class PerformantTheme extends Singleton
     public function registerSidebars()
     {
     }
-    
+
     public function registerAdminScreens()
     {
     }
@@ -172,7 +195,8 @@ abstract class PerformantTheme extends Singleton
 
     public function getTemplatePart(string $filePath)
     {
-        $fullPath = WP_CONTENT_DIR . '/themes/' . static::THEME_SLUG . '/' . $filePath;
-        include($fullPath);
+        $fullPath =
+            WP_CONTENT_DIR . '/themes/' . static::THEME_SLUG . '/' . $filePath;
+        include $fullPath;
     }
 }

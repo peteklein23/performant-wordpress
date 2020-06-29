@@ -10,7 +10,7 @@ use PeteKlein\Performant\Posts\Meta\PostMetaCollection;
 use PeteKlein\Performant\Posts\Taxonomies\PostTaxonomyCollection;
 use PeteKlein\Performant\Taxonomies\TaxonomyBase;
 
-require_once (ABSPATH . '/wp-includes/class-wp-post.php');
+require_once ABSPATH . '/wp-includes/class-wp-post.php';
 
 abstract class PostTypeBase extends Singleton
 {
@@ -38,7 +38,12 @@ abstract class PostTypeBase extends Singleton
     public function __construct()
     {
         if (empty(static::POST_TYPE)) {
-            throw new \Exception(__('You must set the constant POST_TYPE in your inheriting class', 'performant'));
+            throw new \Exception(
+                __(
+                    'You must set the constant POST_TYPE in your inheriting class',
+                    'performant'
+                )
+            );
         }
 
         $this->meta = new PostMetaCollection();
@@ -57,7 +62,7 @@ abstract class PostTypeBase extends Singleton
     {
         $cls = static::class;
         if (!isset(self::$instances[$cls])) {
-            self::$instances[$cls] = new static;
+            self::$instances[$cls] = new static();
         }
 
         return self::$instances[$cls];
@@ -74,14 +79,14 @@ abstract class PostTypeBase extends Singleton
      * @return array registration args
      */
     public static function getRegistrationArgs(
-        string $argType, 
-        string $singularLabel, 
-        string $pluralLabel, 
+        string $argType,
+        string $singularLabel,
+        string $pluralLabel,
         string $icon = 'dashicons-admin-post'
     ) {
         $defaultArgs = [
             'labels' => self::getLabels($singularLabel, $pluralLabel),
-            'menu_icon' => $icon
+            'menu_icon' => $icon,
         ];
 
         if ($argType === self::PUBLIC_TYPE) {
@@ -90,7 +95,7 @@ abstract class PostTypeBase extends Singleton
                 'has_archive' => true,
                 'show_in_rest' => true,
                 'menu_position' => 25,
-                'supports' => ['title', 'editor', 'thumbnail', 'author']
+                'supports' => ['title', 'editor', 'thumbnail', 'author'],
             ]);
         }
 
@@ -105,7 +110,7 @@ abstract class PostTypeBase extends Singleton
                 'show_in_nav_menus' => false,
                 'map_meta_cap' => true,
                 'menu_position' => 25,
-                'supports' => ['title', 'editor', 'thumbnail', 'author']
+                'supports' => ['title', 'editor', 'thumbnail', 'author'],
             ]);
         }
 
@@ -113,7 +118,7 @@ abstract class PostTypeBase extends Singleton
     }
 
     /**
-     * Register the post type with the 
+     * Register the post type with the
      *
      * @see https://codex.wordpress.org/Function_Reference/register_post_type#Arguments
      * @param array $args
@@ -121,13 +126,12 @@ abstract class PostTypeBase extends Singleton
      */
     protected function registerPostType(array $args = [])
     {
-        $registeredPostType = register_post_type(
-            static::POST_TYPE,
-            $args
-        );
+        $registeredPostType = register_post_type(static::POST_TYPE, $args);
 
         if (is_wp_error($registeredPostType)) {
-            throw new \Exception('There was an issue registering the post type.');
+            throw new \Exception(
+                'There was an issue registering the post type.'
+            );
         }
     }
 
@@ -138,29 +142,40 @@ abstract class PostTypeBase extends Singleton
      * @param string $pluralLabel
      * @return array $labels @see https://codex.wordpress.org/Function_Reference/register_post_type#Arguments
      */
-    protected static function getLabels(string $singularLabel, string $pluralLabel)
-    {
+    protected static function getLabels(
+        string $singularLabel,
+        string $pluralLabel
+    ) {
         return [
             'name' => $pluralLabel,
             'singular_name' => $singularLabel,
-            'add_new_item' => __('Add New', 'performant') . ' ' . $singularLabel,
+            'add_new_item' =>
+                __('Add New', 'performant') . ' ' . $singularLabel,
             'edit_item' => __('Edit', 'performant') . ' ' . $singularLabel,
             'new_item' => __('New', 'performant') . ' ' . $singularLabel,
             'view_item' => __('View', 'performant') . ' ' . $singularLabel,
             'search_items' => __('Search', 'performant') . ' ' . $pluralLabel,
             'not_found' => __('None found', 'performant'),
             'not_found_in_trash' => __('None found in trash', 'performant'),
-            'parent_item_colon' => __('Parent ', 'performant') . ' ' . $pluralLabel,
+            'parent_item_colon' =>
+                __('Parent ', 'performant') . ' ' . $pluralLabel,
             'all_items' => __('All ', 'performant') . ' ' . $pluralLabel,
             'archives' => $pluralLabel . ' ' . __('Archives', 'performant'),
             'attributes' => $pluralLabel . ' ' . __('Attributes', 'performant'),
-            'insert_into_item' => __('Insert into', 'performant') . ' ' . $singularLabel,
-            'uploaded_to_this_item' => __('Uploaded to ', 'performant') . ' ' . $singularLabel,
-            'item_published' => $singularLabel . ' ' . __('published', 'performant'),
-            'item_published_privately' => $singularLabel . ' ' . __('published privately', 'performant'),
-            'item_reverted_to_draft' => $singularLabel . ' ' . __('reverted to draft', 'performant'),
-            'item_scheduled' => $singularLabel . ' ' . __('scheduled', 'performant'),
-            'item_updated' => $singularLabel . ' ' . __('updated', 'performant'),
+            'insert_into_item' =>
+                __('Insert into', 'performant') . ' ' . $singularLabel,
+            'uploaded_to_this_item' =>
+                __('Uploaded to ', 'performant') . ' ' . $singularLabel,
+            'item_published' =>
+                $singularLabel . ' ' . __('published', 'performant'),
+            'item_published_privately' =>
+                $singularLabel . ' ' . __('published privately', 'performant'),
+            'item_reverted_to_draft' =>
+                $singularLabel . ' ' . __('reverted to draft', 'performant'),
+            'item_scheduled' =>
+                $singularLabel . ' ' . __('scheduled', 'performant'),
+            'item_updated' =>
+                $singularLabel . ' ' . __('updated', 'performant'),
         ];
     }
 
@@ -173,7 +188,7 @@ abstract class PostTypeBase extends Singleton
     private function fetchPosts(array $postIds): array
     {
         global $wpdb;
-        
+
         $postIdList = join(',', $postIds);
         $postType = static::POST_TYPE;
 
@@ -182,7 +197,7 @@ abstract class PostTypeBase extends Singleton
         FROM $wpdb->posts
         WHERE ID IN ($postIdList)
         AND post_type = '$postType'";
-        
+
         return $wpdb->get_results($query);
     }
 
@@ -194,7 +209,7 @@ abstract class PostTypeBase extends Singleton
      */
     public function listPosts(array $postIds): array
     {
-        if(empty($postIds)) {
+        if (empty($postIds)) {
             return [];
         }
 
@@ -322,8 +337,9 @@ abstract class PostTypeBase extends Singleton
      * @param ImageSizeBase $imageSize
      * @return PostTypeBase
      */
-    protected function addFeaturedImageSize(ImageSizeBase $imageSize): PostTypeBase
-    {
+    protected function addFeaturedImageSize(
+        ImageSizeBase $imageSize
+    ): PostTypeBase {
         $this->featuredImages->addSize($imageSize::SIZE);
 
         return $this;
@@ -344,7 +360,7 @@ abstract class PostTypeBase extends Singleton
 
     public function listPostData(array $postIds): array
     {
-        if(empty($postIds)) {
+        if (empty($postIds)) {
             return [];
         }
 
@@ -355,12 +371,16 @@ abstract class PostTypeBase extends Singleton
 
         $postData = [];
 
-        foreach($postIds as $postId) {
+        foreach ($postIds as $postId) {
             $postData[$postId] = [
                 'post' => empty($posts[$postId]) ? [] : $posts[$postId],
                 'meta' => empty($meta[$postId]) ? [] : $meta[$postId],
-                'taxonomies' => empty($taxonomies[$postId]) ? [] : $taxonomies[$postId],
-                'featured_images' => empty($featuredImages[$postId]) ? [] : $featuredImages[$postId]
+                'taxonomies' => empty($taxonomies[$postId])
+                    ? []
+                    : $taxonomies[$postId],
+                'featured_images' => empty($featuredImages[$postId])
+                    ? []
+                    : $featuredImages[$postId],
             ];
         }
 
